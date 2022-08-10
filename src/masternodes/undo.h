@@ -27,9 +27,11 @@ struct UndoKey {
 
 struct CUndo {
     MapKV before;
+    MapKV difference;
 
     static CUndo Construct(CStorageKV const & before, MapKV const & diff) {
         CUndo result;
+        result.difference.insert(diff.begin(), diff.end());
         for (const auto & kv : diff) {
             const auto& beforeKey = kv.first;
             TBytes beforeVal;
@@ -57,6 +59,7 @@ struct CUndo {
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(before);
+        READWRITE(difference);
     }
 };
 

@@ -1,6 +1,8 @@
 #include <masternodes/accountshistory.h>
 #include <masternodes/govvariables/attributes.h>
 #include <masternodes/mn_rpc.h>
+#include <masternodes/undos.h>
+#include <flushablestorage.h>
 
 std::string tokenAmountString(CTokenAmount const& amount, AmountFormat format = AmountFormat::Symbol) {
     const auto token = pcustomcsview->GetToken(amount.nTokenId);
@@ -2517,6 +2519,110 @@ UniValue getpendingdusdswaps(const JSONRPCRequest& request) {
     return GetRPCResultCache().Set(request, obj);
 }
 
+UniValue getundo(const JSONRPCRequest& request) {
+    RPCHelpMan{"getundo",
+               "Get specific undo information for a transaction.\n",
+               {
+                       {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "Transaction ID"},
+                       {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height of transaction"},
+               },
+               RPCResult{
+                       "{\n"
+                       "... to be added\n"
+                       "}\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("getundo", "b1c2a1... 1234567")
+               },
+    }.Check(request);
+
+    std::string const txidStr = request.params[0].getValStr();
+    uint256 const txid = uint256S(txidStr);
+    uint32_t height = request.params[1].get_int();
+
+    LOCK(cs_main);
+    CCustomCSView view(*pcustomcsview);
+
+    const auto undo = view.GetUndo(UndoKey{height, txid});
+    if (!undo) {
+        UniValue value{UniValue::VOBJ};
+        value.pushKV("error", "no undo found for the specified undo key");
+        return value; // not custom tx, or no changes done
+    }
+
+    MapKV refkv = undo->before;
+    MapKV newkv = undo->difference;
+
+    UniValue valarr{UniValue::VARR};
+
+
+    // extractAllAccountDifferences
+    for (const auto& kv : newkv) {
+        TBytes key = kv.first;
+
+        // check if key belongs to account balance 'a' prefix .. if not continue
+        std::pair<uint8_t, BalanceKey> keyPair;
+        if (key[0] == 'a') {
+            // deserialize incl prefix
+            BytesToDbType(key, keyPair);
+        }else{
+            continue;
+        }
+
+        // at this point we know, value must be Balance struct
+        TBytes value;
+        if(kv.second){
+            value = *kv.second;
+        }         
+
+        TBytes oldValue;
+        if(refkv[key])
+            oldValue = *(refkv[key]);
+
+        CTxDestination dest;
+        ExtractDestination(keyPair.second.owner, dest);
+        std::string owner = EncodeDestination(dest);
+
+        // three scenarios
+        // 1. balance change
+        if(value.size() > 0 && oldValue.size()>0){
+            int64_t old;
+            BytesToDbType(oldValue, old);
+            int64_t newval;
+            BytesToDbType(value, newval);
+
+             UniValue obj{UniValue::VOBJ};
+             obj.pushKV("owner", owner);
+             obj.pushKV("amount_difference", ValueFromAmount(newval - old));
+             valarr.push_back(obj);
+        }   
+        // 2. first balance increase
+        else if(value.size() > 0 && oldValue.size()==0){
+            int64_t newval;
+            BytesToDbType(value, newval);
+            UniValue obj{UniValue::VOBJ};
+            obj.pushKV("owner", owner);
+            obj.pushKV("amount_difference", ValueFromAmount(newval));
+            valarr.push_back(obj);
+        }
+        // 3. decrease to nil
+        else if(value.size() == 0 && oldValue.size()>0){
+            int64_t old;
+            BytesToDbType(oldValue, old);
+            UniValue obj{UniValue::VOBJ};
+            obj.pushKV("owner", owner);
+            obj.pushKV("amount_difference", ValueFromAmount(-old));
+            valarr.push_back(obj);
+        }else{
+            continue;
+        }
+    }
+
+    UniValue changes{UniValue::VOBJ};
+    changes.pushKV("balance_changes", valarr);
+    
+    return changes;
+}
 
 static const CRPCCommand commands[] =
 {
@@ -2543,6 +2649,7 @@ static const CRPCCommand commands[] =
     {"accounts",   "getpendingfutureswaps",    &getpendingfutureswaps,     {"address"}},
     {"accounts",   "listpendingdusdswaps",     &listpendingdusdswaps,      {}},
     {"accounts",   "getpendingdusdswaps",      &getpendingdusdswaps,       {"address"}},
+    {"accounts",   "getundo",                  &getundo,                   {"txid", "blockheight"}},
     {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
 };
 

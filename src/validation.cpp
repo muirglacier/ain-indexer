@@ -3063,42 +3063,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     }
     mnview.SetLastHeight(pindex->nHeight);
 
-    auto &checkpoints = chainparams.Checkpoints().mapCheckpoints;
-    auto it = checkpoints.lower_bound(pindex->nHeight);
-    if (it != checkpoints.begin()) {
-        --it;
-        bool pruneStarted = false;
-        auto time = GetTimeMillis();
-        CCustomCSView pruned(mnview);
-        mnview.ForEachUndo([&](UndoKey const & key, CLazySerialize<CUndo>) {
-            if (key.height >= static_cast<uint32_t>(it->first)) { // don't erase checkpoint height
-                return false;
-            }
-            if (!pruneStarted) {
-                pruneStarted = true;
-                LogPrintf("Pruning undo data prior %d, it can take a while...\n", it->first);
-            }
-            return pruned.DelUndo(key).ok;
-        });
-        if (pruneStarted) {
-            auto& map = pruned.GetStorage().GetRaw();
-            compactBegin = map.begin()->first;
-            compactEnd = map.rbegin()->first;
-            pruned.Flush();
-            LogPrintf("Pruning undo data finished.\n");
-            LogPrint(BCLog::BENCH, "    - Pruning undo data takes: %dms\n", GetTimeMillis() - time);
-        }
-        // we can safety delete old interest keys
-        if (it->first > chainparams.GetConsensus().FortCanningHillHeight) {
-            CCustomCSView view(mnview);
-            mnview.ForEachVaultInterest([&](const CVaultId& vaultId, DCT_ID tokenId, CInterestRate) {
-                view.EraseBy<CLoanView::LoanInterestByVault>(std::make_pair(vaultId, tokenId));
-                return true;
-            });
-            view.Flush();
-        }
-    }
-
     if (isSplitsBlock) {
         LogPrintf("Token split block validation time: %.2fms\n", MILLI * (GetTimeMicros() - nTime1));
     }
