@@ -2524,7 +2524,7 @@ UniValue getundo(const JSONRPCRequest& request) {
                "Get specific undo information for a transaction.\n",
                {
                        {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "Transaction ID"},
-                       {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height of transaction"},
+                       {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height of transaction (integer)"},
                },
                RPCResult{
                        "{\n"
@@ -2532,13 +2532,14 @@ UniValue getundo(const JSONRPCRequest& request) {
                        "}\n"
                },
                RPCExamples{
-                       HelpExampleCli("getundo", "b1c2a1... 1234567")
+                       HelpExampleCli("getundo","")
                },
     }.Check(request);
 
-    std::string const txidStr = request.params[0].getValStr();
+
+    std::string const txidStr = request.params[0].get_str();
     uint256 const txid = uint256S(txidStr);
-    uint32_t height = request.params[1].get_int();
+    uint32_t height = atoi(request.params[1].get_str().c_str());
 
     LOCK(cs_main);
     CCustomCSView view(*pcustomcsview);
@@ -2649,7 +2650,7 @@ static const CRPCCommand commands[] =
     {"accounts",   "getpendingfutureswaps",    &getpendingfutureswaps,     {"address"}},
     {"accounts",   "listpendingdusdswaps",     &listpendingdusdswaps,      {}},
     {"accounts",   "getpendingdusdswaps",      &getpendingdusdswaps,       {"address"}},
-    {"accounts",   "getundo",                  &getundo,                   {"txid", "blockheight"}},
+    {"accounts",   "getundo",                  &getundo,                   {"txid", "blockHeight"}},
     {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
 };
 

@@ -13,11 +13,8 @@
 #include <masternodes/govvariables/oracle_block_interval.h>
 #include <masternodes/govvariables/oracle_deviation.h>
 
-std::map<std::string, std::shared_ptr<GovVariable> > cache;
-
 Res CGovView::SetVariable(GovVariable const & var)
 {
-    cache.clear();
     auto WriteVar = [this](GovVariable const & var) {
         return WriteBy<ByName>(var.GetName(), var) ? Res::Ok() : Res::Err("can't write to DB");
     };
@@ -45,15 +42,10 @@ Res CGovView::SetVariable(GovVariable const & var)
 
 std::shared_ptr<GovVariable> CGovView::GetVariable(std::string const & name) const
 {
-    auto it = cache.find(name);
-    if (it != cache.end()) {
-        return it->second;
-    }
     auto var = GovVariable::Create(name);
     if (var) {
         /// @todo empty or NO variable??
         ReadBy<ByName>(std::string(var->GetName()), *var);
-        cache.insert({std::string(var->GetName()), var});
         return var;
     }
     return {};
