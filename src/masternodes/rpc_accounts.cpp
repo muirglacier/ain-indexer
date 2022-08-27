@@ -2555,65 +2555,129 @@ UniValue getundo(const JSONRPCRequest& request) {
     MapKV newkv = undo->difference;
 
     UniValue valarr{UniValue::VARR};
+    UniValue lparr{UniValue::VARR};
 
 
     // extractAllAccountDifferences
     for (const auto& kv : newkv) {
         TBytes key = kv.first;
 
-        // check if key belongs to account balance 'a' prefix .. if not continue
-        std::pair<uint8_t, BalanceKey> keyPair;
+        // check if key belongs to account balance 'a' prefix or LP pool 'R' reserve value prefix .. if not continue
         if (key[0] == 'a') {
+
+            std::pair<uint8_t, BalanceKey> keyPair;
+
             // deserialize incl prefix
             BytesToDbType(key, keyPair);
-        }else{
-            continue;
-        }
+        
+            // at this point we know, value must be Balance struct
+            TBytes value;
+            if(kv.second){
+                value = *kv.second;
+            }         
 
-        // at this point we know, value must be Balance struct
-        TBytes value;
-        if(kv.second){
-            value = *kv.second;
-        }         
+            TBytes oldValue;
+            if(refkv[key])
+                oldValue = *(refkv[key]);
 
-        TBytes oldValue;
-        if(refkv[key])
-            oldValue = *(refkv[key]);
+            CTxDestination dest;
+            ExtractDestination(keyPair.second.owner, dest);
+            std::string owner = EncodeDestination(dest);
 
-        CTxDestination dest;
-        ExtractDestination(keyPair.second.owner, dest);
-        std::string owner = EncodeDestination(dest);
+            // three scenarios
+            // 1. balance change
+            if(value.size() > 0 && oldValue.size()>0){
+                int64_t old;
+                BytesToDbType(oldValue, old);
+                int64_t newval;
+                BytesToDbType(value, newval);
 
-        // three scenarios
-        // 1. balance change
-        if(value.size() > 0 && oldValue.size()>0){
-            int64_t old;
-            BytesToDbType(oldValue, old);
-            int64_t newval;
-            BytesToDbType(value, newval);
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("owner", owner);
+                obj.pushKV("amount_difference", ValueFromAmount(newval - old));
+                obj.pushKV("token", (int)keyPair.second.tokenID.v);
+                valarr.push_back(obj);
+            }   
+            // 2. first balance increase
+            else if(value.size() > 0 && oldValue.size()==0){
+                int64_t newval;
+                BytesToDbType(value, newval);
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("owner", owner);
+                obj.pushKV("amount_difference", ValueFromAmount(newval));
+                obj.pushKV("token", (int)keyPair.second.tokenID.v);
+                valarr.push_back(obj);
+            }
+            // 3. decrease to nil
+            else if(value.size() == 0 && oldValue.size()>0){
+                int64_t old;
+                BytesToDbType(oldValue, old);
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("owner", owner);
+                obj.pushKV("amount_difference", ValueFromAmount(-old));
+                obj.pushKV("token", (int)keyPair.second.tokenID.v);
+                valarr.push_back(obj);
+            }else{
+                continue;
+            }
 
-             UniValue obj{UniValue::VOBJ};
-             obj.pushKV("owner", owner);
-             obj.pushKV("amount_difference", ValueFromAmount(newval - old));
-             valarr.push_back(obj);
-        }   
-        // 2. first balance increase
-        else if(value.size() > 0 && oldValue.size()==0){
-            int64_t newval;
-            BytesToDbType(value, newval);
-            UniValue obj{UniValue::VOBJ};
-            obj.pushKV("owner", owner);
-            obj.pushKV("amount_difference", ValueFromAmount(newval));
-            valarr.push_back(obj);
-        }
-        // 3. decrease to nil
-        else if(value.size() == 0 && oldValue.size()>0){
-            int64_t old;
-            BytesToDbType(oldValue, old);
-            UniValue obj{UniValue::VOBJ};
-            obj.pushKV("owner", owner);
-            obj.pushKV("amount_difference", ValueFromAmount(-old));
-            valarr.push_back(obj);
+        } else if(key[0] == 'R'){
+
+            std::pair<uint8_t, DCT_ID> keyPair;
+            
+            BytesToDbType(key, keyPair);
+
+            // at this point we know, value must be Balance struct
+            TBytes value;
+            if(kv.second){
+                value = *kv.second;
+            }         
+
+            TBytes oldValue;
+            if(refkv[key])
+                oldValue = *(refkv[key]);
+
+            if(value.size() > 0 && oldValue.size()>0){
+                PoolReservesValue old;
+                BytesToDbType(oldValue, old);
+                PoolReservesValue newval;
+                BytesToDbType(value, newval);
+
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("poolId", (int)keyPair.second.v);
+                obj.pushKV("oldReserveA", old.reserveA);
+                obj.pushKV("oldReserveB", old.reserveB);
+                obj.pushKV("newReserveA", newval.reserveA);
+                obj.pushKV("newReserveB", newval.reserveB);
+                lparr.push_back(obj);
+            }   
+            // 2. first balance increase
+            else if(value.size() > 0 && oldValue.size()==0){
+                PoolReservesValue newval;
+                BytesToDbType(value, newval);
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("poolId", (int)keyPair.second.v);
+                obj.pushKV("oldReserveA", 0);
+                obj.pushKV("oldReserveB", 0);
+                obj.pushKV("newReserveA", newval.reserveA);
+                obj.pushKV("newReserveB", newval.reserveB);
+                lparr.push_back(obj);
+            }
+            // 3. decrease to nil
+            else if(value.size() == 0 && oldValue.size()>0){
+                PoolReservesValue old;
+                BytesToDbType(oldValue, old);
+                UniValue obj{UniValue::VOBJ};
+                obj.pushKV("poolId", (int)keyPair.second.v);
+                obj.pushKV("oldReserveA", old.reserveA);
+                obj.pushKV("oldReserveB", old.reserveB);
+                obj.pushKV("newReserveA", 0);
+                obj.pushKV("newReserveB", 0);
+                lparr.push_back(obj);
+            }else{
+                continue;
+            }
+            
         }else{
             continue;
         }
@@ -2621,7 +2685,7 @@ UniValue getundo(const JSONRPCRequest& request) {
 
     UniValue changes{UniValue::VOBJ};
     changes.pushKV("balance_changes", valarr);
-    
+    changes.pushKV("reserve_changes", valarr);
     return changes;
 }
 

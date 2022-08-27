@@ -23,19 +23,6 @@ struct PoolSwapValue {
     }
 };
 
-struct PoolReservesValue {
-    CAmount reserveA;
-    CAmount reserveB;
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(reserveA);
-        READWRITE(reserveB);
-    }
-};
-
 std::string RewardToString(RewardType type)
 {
     if (type & RewardType::Rewards) {
