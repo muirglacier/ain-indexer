@@ -2685,7 +2685,7 @@ UniValue getundo(const JSONRPCRequest& request) {
 
     UniValue changes{UniValue::VOBJ};
     changes.pushKV("balance_changes", valarr);
-    changes.pushKV("reserve_changes", valarr);
+    changes.pushKV("reserve_changes", lparr);
     return changes;
 }
 
