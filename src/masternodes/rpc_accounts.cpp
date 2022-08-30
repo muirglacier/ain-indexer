@@ -2595,6 +2595,7 @@ UniValue getundo(const JSONRPCRequest& request) {
                 UniValue obj{UniValue::VOBJ};
                 obj.pushKV("owner", owner);
                 obj.pushKV("amount_difference", ValueFromAmount(newval - old));
+                obj.pushKV("new_amount", ValueFromAmount(newval));
                 obj.pushKV("token", (int)keyPair.second.tokenID.v);
                 valarr.push_back(obj);
             }   
@@ -2605,6 +2606,7 @@ UniValue getundo(const JSONRPCRequest& request) {
                 UniValue obj{UniValue::VOBJ};
                 obj.pushKV("owner", owner);
                 obj.pushKV("amount_difference", ValueFromAmount(newval));
+                obj.pushKV("new_amount", ValueFromAmount(newval));
                 obj.pushKV("token", (int)keyPair.second.tokenID.v);
                 valarr.push_back(obj);
             }
@@ -2615,6 +2617,7 @@ UniValue getundo(const JSONRPCRequest& request) {
                 UniValue obj{UniValue::VOBJ};
                 obj.pushKV("owner", owner);
                 obj.pushKV("amount_difference", ValueFromAmount(-old));
+                obj.pushKV("new_amount", ValueFromUint(0));
                 obj.pushKV("token", (int)keyPair.second.tokenID.v);
                 valarr.push_back(obj);
             }else{
