@@ -53,12 +53,26 @@ struct CFuturesUserValue {
     }
 };
 
+struct CDoubleReason {
+    std::string reason1;
+    DCT_ID reason2;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(reason1);
+        READWRITE(reason2);
+    }
+};
+
 class CAccountsView : public virtual CStorageView
 {
 public:
     void ForEachAccount(std::function<bool(CScript const &)> callback, CScript const & start = {});
     void ForEachBalance(std::function<bool(CScript const &, CTokenAmount const &)> callback, BalanceKey const & start = {});
     CTokenAmount GetBalance(CScript const & owner, DCT_ID tokenID) const;
+    std::array<std::pair<CDoubleReason, CTokenAmount> > GetDetailedBalance(CScript const & owner, DCT_ID tokenID) const;
 
     virtual Res AddBalance(CScript const & owner, CTokenAmount amount);
     virtual Res SubBalance(CScript const & owner, CTokenAmount amount);
@@ -80,6 +94,7 @@ public:
             {std::numeric_limits<uint32_t>::max(), {}, std::numeric_limits<uint32_t>::max()});
 
     // tags
+    struct ByBalanceDetailsKey { static constexpr uint8_t prefix() { return (char)0x99; } };
     struct ByBalanceKey { static constexpr uint8_t prefix() { return 'a'; } };
     struct ByHeightKey  { static constexpr uint8_t prefix() { return 'b'; } };
     struct ByFuturesSwapKey  { static constexpr uint8_t prefix() { return 'J'; } };
@@ -87,6 +102,7 @@ public:
 
 private:
     Res SetBalance(CScript const & owner, CTokenAmount amount);
+    Res SetDetailedBalance(CScript const & owner, std::array<std::pair<CDoubleReason, CTokenAmount> > amount);
 };
 
 #endif //DEFI_MASTERNODES_ACCOUNTS_H

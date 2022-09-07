@@ -31,7 +31,24 @@ Res CAccountsView::SetBalance(CScript const & owner, CTokenAmount amount)
     return Res::Ok();
 }
 
-Res CAccountsView::AddBalance(CScript const & owner, CTokenAmount amount)
+std::array<std::pair<CDoubleReason, CTokenAmount> > CAccountsView::GetDetailedBalance(CScript const & owner, DCT_ID tokenID) const
+{
+    std::array<std::pair<CDoubleReason, CTokenAmount> > val;
+    bool ok = ReadBy<ByBalanceDetailsKey>(BalanceKey{owner, tokenID}, val);
+    if (ok) {
+        return val;
+    }
+    val.clear();
+    return CTokenAmount{tokenID, val};
+}
+
+Res CAccountsView::SetDetailedBalance(CScript const & owner, std::array<std::pair<CDoubleReason, CTokenAmount> > amount)
+{
+    WriteBy<ByBalanceKey>(BalanceKey{owner, amount.nTokenId}, amount);
+    return Res::Ok();
+}
+
+Res CAccountsView::AddBalance(CScript const & owner, CTokenAmount amount, CDoubleReason* reason)
 {
     if (amount.nValue == 0) {
         return Res::Ok();
@@ -41,10 +58,21 @@ Res CAccountsView::AddBalance(CScript const & owner, CTokenAmount amount)
     if (!res.ok) {
         return res;
     }
+
+    if(reason) {
+        auto balance = GetDetailedBalance(owner, amount.nTokenId);
+        balance.push_back(std::make_pair<CDoubleReason, CTokenAmount>>(reason, amount.nValue));
+        
+        auto res2 = SetDetailedBalance(pwner, reason);
+        if (!res2.ok) {
+            return res;
+        }
+    }
+
     return SetBalance(owner, balance);
 }
 
-Res CAccountsView::SubBalance(CScript const & owner, CTokenAmount amount)
+Res CAccountsView::SubBalance(CScript const & owner, CTokenAmount amount, CDoubleReason* reason)
 {
     if (amount.nValue == 0) {
         return Res::Ok();
@@ -54,13 +82,24 @@ Res CAccountsView::SubBalance(CScript const & owner, CTokenAmount amount)
     if (!res.ok) {
         return res;
     }
+
+    if(reason) {
+        auto balance = GetDetailedBalance(owner, amount.nTokenId);
+        balance.push_back(std::make_pair<CDoubleReason, CTokenAmount>>(reason, amount.nValue));
+        
+        auto res2 = SetDetailedBalance(pwner, reason);
+        if (!res2.ok) {
+            return res;
+        }
+    }
+
     return SetBalance(owner, balance);
 }
 
-Res CAccountsView::AddBalances(CScript const & owner, CBalances const & balances)
+Res CAccountsView::AddBalances(CScript const & owner, CBalances const & balances, CDoubleReason* reason)
 {
     for (const auto& kv : balances.balances) {
-        auto res = AddBalance(owner, CTokenAmount{kv.first, kv.second});
+        auto res = AddBalance(owner, CTokenAmount{kv.first, kv.second}, reason);
         if (!res.ok) {
             return res;
         }
@@ -68,10 +107,10 @@ Res CAccountsView::AddBalances(CScript const & owner, CBalances const & balances
     return Res::Ok();
 }
 
-Res CAccountsView::SubBalances(CScript const & owner, CBalances const & balances)
+Res CAccountsView::SubBalances(CScript const & owner, CBalances const & balances, CDoubleReason* reason)
 {
     for (const auto& kv : balances.balances) {
-        auto res = SubBalance(owner, CTokenAmount{kv.first, kv.second});
+        auto res = SubBalance(owner, CTokenAmount{kv.first, kv.second}, reason);
         if (!res.ok) {
             return res;
         }

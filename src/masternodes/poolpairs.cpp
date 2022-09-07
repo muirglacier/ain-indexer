@@ -467,7 +467,7 @@ CAmount CPoolPair::slopeSwap(CAmount unswapped, CAmount &poolFrom, CAmount &pool
     return swapped.GetLow64();
 }
 
-std::pair<CAmount, CAmount> CPoolPairView::UpdatePoolRewards(std::function<CTokenAmount(CScript const &, DCT_ID)> onGetBalance, std::function<Res(CScript const &, CScript const &, CTokenAmount)> onTransfer, int nHeight) {
+std::pair<CAmount, CAmount> CPoolPairView::UpdatePoolRewards(std::function<CTokenAmount(CScript const &, DCT_ID)> onGetBalance, std::function<Res(CScript const &, CScript const &, CTokenAmount, DCT_ID)> onTransfer, int nHeight) {
 
     bool newRewardCalc = nHeight >= Params().GetConsensus().BayfrontGardensHeight;
     bool newRewardLogic = nHeight >= Params().GetConsensus().EunosHeight;

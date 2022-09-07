@@ -60,7 +60,7 @@ Res AddPoolLiquidity(CCustomCSView &mnview, DCT_ID idPool, CAmount amountA, CAmo
     const auto res = optPool->AddLiquidity(amountA, amountB, [&] /*onMint*/(CAmount liqAmount) -> Res {
         BOOST_CHECK(liqAmount > 0);
 
-        auto add = mnview.AddBalance(shareAddress, { idPool, liqAmount });
+        auto add = mnview.AddBalance(shareAddress, { idPool, liqAmount }, null);
         if (!add.ok) {
             return add;
         }
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(owner_rewards)
                 default:
                     BOOST_REQUIRE(false);
                 }
-                mnview.AddBalance(shareAddress[0], amount);
+                mnview.AddBalance(shareAddress[0], amount, null);
             }
         );
         return true;
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(owner_rewards)
                         BOOST_CHECK_EQUAL(amount.nValue, oldCommissionCalculation(onLiquidity(), pool).second);
                     }
                 }
-                mnview.AddBalance(shareAddress[1], amount);
+                mnview.AddBalance(shareAddress[1], amount, null);
             }
         );
         return false;

@@ -144,7 +144,7 @@ static void onPoolRewards(CCustomCSView & view, CScript const & owner, uint32_t 
                     firstHeight = height;
                 }
                 if (height >= eunosHeight || firstHeight != height) {
-                    mnview.AddBalance(owner, amount); // update owner liquidity
+                    mnview.AddBalance(owner, amount, null); // update owner liquidity
                 }
             }
         );
@@ -942,14 +942,14 @@ public:
             auto token = view.GetToken(balance.first);
             auto IsPoolShare = token && token->IsPoolShare();
             if (amount > 0) {
-                view.AddBalance(owner, {balance.first, amount});
+                view.AddBalance(owner, {balance.first, amount}, null);
                 if (IsPoolShare) {
                     if (view.GetBalance(owner, balance.first).nValue == amount) {
                         view.SetShare(balance.first, owner, 0);
                     }
                 }
             } else {
-                view.SubBalance(owner, {balance.first, -amount});
+                view.SubBalance(owner, {balance.first, -amount}, null);
                 if (IsPoolShare) {
                     if (view.GetBalance(owner, balance.first).nValue == 0) {
                         view.DelShare(balance.first, owner);
