@@ -136,7 +136,7 @@ CAccountsHistoryWriter::CAccountsHistoryWriter(CCustomCSView & storage, uint32_t
 
 Res CAccountsHistoryWriter::AddBalance(CScript const & owner, CTokenAmount amount)
 {
-    auto res = CCustomCSView::AddBalance(owner, amount);
+    auto res = CCustomCSView::AddBalance(owner, amount, NULL);
     if (writers && amount.nValue != 0 && res.ok) {
         writers->AddBalance(owner, amount, vaultID);
     }
@@ -146,7 +146,7 @@ Res CAccountsHistoryWriter::AddBalance(CScript const & owner, CTokenAmount amoun
 
 Res CAccountsHistoryWriter::SubBalance(CScript const & owner, CTokenAmount amount)
 {
-    auto res = CCustomCSView::SubBalance(owner, amount);
+    auto res = CCustomCSView::SubBalance(owner, amount, NULL);
     if (writers && res.ok && amount.nValue != 0) {
         writers->SubBalance(owner, amount, vaultID);
     }

@@ -379,7 +379,7 @@ CRPCConvertTable::CRPCConvertTable()
 
 static CRPCConvertTable rpcCvtTable;
 
-/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
+/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, NULL)
  * as well as objects and arrays.
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal)

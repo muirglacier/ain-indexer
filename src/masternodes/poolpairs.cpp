@@ -535,7 +535,7 @@ std::pair<CAmount, CAmount> CPoolPairView::UpdatePoolRewards(std::function<CToke
 
             for (const auto& reward : rewards.balances) {
                 // subtract pool's owner account by custom block reward
-                onTransfer(*ownerAddress, {}, {reward.first, reward.second});
+                onTransfer(*ownerAddress, {}, {reward.first, reward.second}, poolId);
             }
 
         } else {
@@ -564,10 +564,10 @@ std::pair<CAmount, CAmount> CPoolPairView::UpdatePoolRewards(std::function<CToke
                     }
                     auto tokenIds = ReadBy<ByIDPair, ByPairKey>(poolId);
                     assert(tokenIds);
-                    if (onTransfer({}, provider, {tokenIds->idTokenA, feeA})) {
+                    if (onTransfer({}, provider, {tokenIds->idTokenA, feeA}, poolId)) {
                         distributedFeeA += feeA;
                     }
-                    if (onTransfer({}, provider, {tokenIds->idTokenB, feeB})) {
+                    if (onTransfer({}, provider, {tokenIds->idTokenB, feeB}, poolId)) {
                         distributedFeeB += feeB;
                     }
                 }
@@ -580,14 +580,14 @@ std::pair<CAmount, CAmount> CPoolPairView::UpdatePoolRewards(std::function<CToke
                     } else {
                         providerReward = poolReward * liqWeight / PRECISION;
                     }
-                    if (onTransfer({}, provider, {DCT_ID{0}, providerReward})) {
+                    if (onTransfer({}, provider, {DCT_ID{0}, providerReward}, poolId)) {
                         totalDistributed += providerReward;
                     }
                 }
 
                 for (const auto& reward : rewards.balances) {
                     if (auto providerReward = liquidityReward(reward.second, liquidity, totalLiquidity)) {
-                        onTransfer(*ownerAddress, provider, {reward.first, providerReward});
+                        onTransfer(*ownerAddress, provider, {reward.first, providerReward}, currentId);
                     }
                 }
 

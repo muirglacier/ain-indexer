@@ -120,8 +120,8 @@ public:
     uint256 vaultID;
 
     CAccountsHistoryWriter(CCustomCSView & storage, uint32_t height, uint32_t txn, const uint256& txid, uint8_t type, CHistoryWriters* writers);
-    Res AddBalance(CScript const & owner, CTokenAmount amount) override;
-    Res SubBalance(CScript const & owner, CTokenAmount amount) override;
+    Res AddBalance(CScript const & owner, CTokenAmount amount);
+    Res SubBalance(CScript const & owner, CTokenAmount amount);
     bool Flush() override;
 
     CAccountHistoryStorage* GetAccountHistoryStore() override;

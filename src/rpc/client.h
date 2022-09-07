@@ -14,7 +14,7 @@ UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::s
 /** Convert named arguments to command-specific RPC representation */
 UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
-/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
+/** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, NULL)
  * as well as objects and arrays.
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
