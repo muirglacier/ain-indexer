@@ -2254,8 +2254,10 @@ void CChainState::ProcessEunosEvents(const CBlockIndex* pindex, CCustomCSView& c
 
             return true;
         }, BalanceKey{script, DCT_ID{}});
-
-        cache.SubBalances(script, zeroAmounts);
+        CDoubleReason reason;
+        reason.reason1 = "zero-balance-foundation";
+        reason.reason2 = DCT_ID{0};
+        cache.SubBalances(script, zeroAmounts, &reason);
     }
 
     // Add any non-Tx burns to index as phantom Txs
@@ -3233,7 +3235,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
                 LogPrintf("Can't subtract balance from dfc htlc (%s) txidaddr: %s\n", dfchtlc->creationTx.GetHex(), res.msg);
             else {
                 cache.CalculateOwnerRewards(ownerAddress, pindex->nHeight);
-                cache.AddBalance(ownerAddress, &amount);
+                cache.AddBalance(ownerAddress, &amount, &reason);
             }
 
             cache.ICXCloseDFCHTLC(*dfchtlc, status);
@@ -3656,7 +3658,7 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
                     CTokenAmount destination{destId, total};
                     CDoubleReason reason;
                     reason.reason1 = "future-swap";
-                    reason.reason2 = DCT_ID{futuresValues.source.token};
+                    reason.reason2 = DCT_ID{futuresValues.source.nTokenId};
                     view.AddBalance(key.owner, destination, &reason);
                     burned.Add(futuresValues.source);
                     minted.Add(destination);
@@ -3679,7 +3681,7 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
                 CTokenAmount destination{tokenDUSD->first, total};
                 CDoubleReason reason;
                 reason.reason1 = "future-swap";
-                reason.reason2 = DCT_ID{futuresValues.source.token};
+                reason.reason2 = DCT_ID{futuresValues.source.nTokenId};
                 view.AddBalance(key.owner, destination, &reason);
                 burned.Add(futuresValues.source);
                 minted.Add(destination);
