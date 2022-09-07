@@ -3235,7 +3235,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
                 LogPrintf("Can't subtract balance from dfc htlc (%s) txidaddr: %s\n", dfchtlc->creationTx.GetHex(), res.msg);
             else {
                 cache.CalculateOwnerRewards(ownerAddress, pindex->nHeight);
-                cache.AddBalance(ownerAddress, &amount, &reason);
+                cache.AddBalance(ownerAddress, amount, &reason);
             }
 
             cache.ICXCloseDFCHTLC(*dfchtlc, status);
@@ -3812,14 +3812,18 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
 
             const CTokenAmount source{dfiID, amount};
 
+            CDoubleReason reason;
+            reason.reason1 = "future-swap-refund";
+            reason.reason2 = dfiID;
+
             CHistoryWriters subWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter subView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-            subView.SubBalance(*contractAddressValue, source);
+            subView.SubBalance(*contractAddressValue, source, &reason);
             subView.Flush();
 
             CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
-            addView.AddBalance(key.owner, source);
+            addView.AddBalance(key.owner, source, &reason);
             addView.Flush();
 
             LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
