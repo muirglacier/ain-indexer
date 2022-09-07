@@ -574,6 +574,8 @@ Res ATTRIBUTES::RefundFuturesContracts(CCustomCSView &mnview, const uint32_t hei
 
     std::map<CFuturesUserKey, CFuturesUserValue> userFuturesValues;
 
+   
+
     mnview.ForEachFuturesUserValues([&](const CFuturesUserKey& key, const CFuturesUserValue& futuresValues) {
         if (tokenID != std::numeric_limits<uint32_t>::max()) {
             if (futuresValues.source.nTokenId.v == tokenID || futuresValues.destination == tokenID) {
@@ -603,8 +605,10 @@ Res ATTRIBUTES::RefundFuturesContracts(CCustomCSView &mnview, const uint32_t hei
 
         CHistoryWriters subWriters{historyStore, nullptr, nullptr};
         CAccountsHistoryWriter subView(mnview, currentHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-
-        auto res = subView.SubBalance(*contractAddressValue, value.source);
+        CDoubleReason reason;
+        reason.reason1 = "future-swap-refund";
+        reason.reason2 = DCT_ID{0};
+        auto res = subView.SubBalance(*contractAddressValue, value.source, &reason);
         if (!res) {
             return res;
         }
@@ -613,7 +617,7 @@ Res ATTRIBUTES::RefundFuturesContracts(CCustomCSView &mnview, const uint32_t hei
         CHistoryWriters addWriters{historyStore, nullptr, nullptr};
         CAccountsHistoryWriter addView(mnview, currentHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
 
-        res = addView.AddBalance(key.owner, value.source);
+        res = addView.AddBalance(key.owner, value.source, &reason);
         if (!res) {
             return res;
         }
@@ -650,6 +654,10 @@ Res ATTRIBUTES::RefundFuturesDUSD(CCustomCSView &mnview, const uint32_t height)
         return contractAddressValue;
     }
 
+    CDoubleReason reason;
+    reason.reason1 = "future-swap-refund";
+    reason.reason2 = DCT_ID{0};
+
     CDataStructureV0 liveKey{AttributeTypes::Live, ParamIDs::Economy, EconomyKeys::DFIP2206FCurrent};
     auto balances = GetValue(liveKey, CBalances{});
 
@@ -659,7 +667,7 @@ Res ATTRIBUTES::RefundFuturesDUSD(CCustomCSView &mnview, const uint32_t height)
 
         CHistoryWriters subWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter subView(mnview, height, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-        auto res = subView.SubBalance(*contractAddressValue, {DCT_ID{}, amount});
+        auto res = subView.SubBalance(*contractAddressValue, {DCT_ID{}, amount}, &reason);
         if (!res) {
             return res;
         }
@@ -667,7 +675,7 @@ Res ATTRIBUTES::RefundFuturesDUSD(CCustomCSView &mnview, const uint32_t height)
 
         CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter addView(mnview, height, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
-        res = addView.AddBalance(key.owner, {DCT_ID{}, amount});
+        res = addView.AddBalance(key.owner, {DCT_ID{}, amount}, &reason);
         if (!res) {
             return res;
         }
