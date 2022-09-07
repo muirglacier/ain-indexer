@@ -3705,17 +3705,23 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
 
     auto failedContractsCounter = unpaidContracts.size();
 
-    // Refund unpaid contracts
+
     for (const auto& [key, value] : unpaidContracts) {
+
+        // Refund unpaid contracts
+        CDoubleReason reason;
+        reason.reason1 = "future-swap";
+        reason.reason2 = DCT_ID{value.source.nTokenId};
+
 
         CHistoryWriters subWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter subView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-        subView.SubBalance(*contractAddressValue, value.source);
+        subView.SubBalance(*contractAddressValue, value.source, &reason);
         subView.Flush();
 
         CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
-        addView.AddBalance(key.owner, value.source);
+        addView.AddBalance(key.owner, value.source, &reason);
         addView.Flush();
 
         LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -4248,11 +4254,16 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
             }
 
             for (auto& [owner, amount] : balancesToMigrate) {
+
+                CDoubleReason reason;
+                reason.reason1 = "pool-split";
+                reason.reason2 = DCT_ID{oldPoolId};
+
                 if (owner != Params().GetConsensus().burnAddress) {
                     CHistoryWriters subWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                     CAccountsHistoryWriter subView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &subWriters);
 
-                    res = subView.SubBalance(owner, CTokenAmount{oldPoolId, amount});
+                    res = subView.SubBalance(owner, CTokenAmount{oldPoolId, amount}, &reason);
                     if (!res.ok) {
                         throw std::runtime_error(strprintf("SubBalance failed: %s", res.msg));
                     }
@@ -4290,8 +4301,12 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                 CAccountsHistoryWriter addView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &addWriters);
 
                 auto refundBalances = [&, owner = owner]() {
-                    addView.AddBalance(owner, {newPoolPair.idTokenA, amountA});
-                    addView.AddBalance(owner, {newPoolPair.idTokenB, amountB});
+                    CDoubleReason reason;
+                    reason.reason1 = "pool-split";
+                    reason.reason2 = DCT_ID{0};
+
+                    addView.AddBalance(owner, {newPoolPair.idTokenA, amountA}, &reason);
+                    addView.AddBalance(owner, {newPoolPair.idTokenB, amountB}, &reason);
                     addView.Flush();
                 };
 
@@ -4333,7 +4348,11 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     continue;
                 }
 
-                res = addView.AddBalance(owner, {newPoolId, liquidity});
+                CDoubleReason reason;
+                reason.reason1 = "pool-split";
+                reason.reason2 = DCT_ID{newPoolId};
+
+                res = addView.AddBalance(owner, {newPoolId, liquidity}, &reason);
                 if (!res) {
                     addView.Discard();
                     refundBalances();
