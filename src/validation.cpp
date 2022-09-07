@@ -4354,7 +4354,6 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     continue;
                 }
 
-                CDoubleReason reason;
                 reason.reason1 = "pool-split";
                 reason.reason2 = DCT_ID{newPoolId};
 
@@ -4802,10 +4801,14 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
 
             for (const auto& [owner, balances] : balanceUpdates) {
 
+                CDoubleReason reason;
+                reason.reason1 = "pool-split";
+                reason.reason2 = DCT_ID{newTokenId};
+
                 CHistoryWriters subWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                 CAccountsHistoryWriter subView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &subWriters);
 
-                res = subView.SubBalance(owner, balances.second);
+                res = subView.SubBalance(owner, balances.second, &reason);
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }
@@ -4814,7 +4817,7 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
                 CHistoryWriters addWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                 CAccountsHistoryWriter addView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &addWriters);
 
-                res = addView.AddBalance(owner, balances.first);
+                res = addView.AddBalance(owner, balances.first, &reason);
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }
