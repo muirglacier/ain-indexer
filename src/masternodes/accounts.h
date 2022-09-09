@@ -54,7 +54,7 @@ struct CFuturesUserValue {
 };
 
 struct CDoubleReason {
-    std::string reason1;
+    uint8_t reason1;
     DCT_ID reason2;
 
     ADD_SERIALIZE_METHODS;
@@ -72,13 +72,13 @@ public:
     void ForEachAccount(std::function<bool(CScript const &)> callback, CScript const & start = {});
     void ForEachBalance(std::function<bool(CScript const &, CTokenAmount const &)> callback, BalanceKey const & start = {});
     CTokenAmount GetBalance(CScript const & owner, DCT_ID tokenID) const;
-    std::vector<std::pair<CDoubleReason, CTokenAmount>> GetDetailedBalance(CScript const & owner, DCT_ID tokenID) const;
+    std::vector<std::pair<CDoubleReason, CTokenAmount>> GetDetailedBalance(CScript const & owner, DCT_ID tokenID, uint32_t blockHeight) const;
 
-    virtual Res AddBalance(CScript const & owner, CTokenAmount amount, const CDoubleReason* reason);
-    virtual Res SubBalance(CScript const & owner, CTokenAmount amount, const CDoubleReason* reason);
+    virtual Res AddBalance(CScript const & owner, CTokenAmount amount, const CDoubleReason* reason, uint32_t blockHeight);
+    virtual Res SubBalance(CScript const & owner, CTokenAmount amount, const CDoubleReason* reason, uint32_t blockHeight);
 
-    Res AddBalances(CScript const & owner, CBalances const & balances, const CDoubleReason* reason);
-    Res SubBalances(CScript const & owner, CBalances const & balances, const CDoubleReason* reason);
+    Res AddBalances(CScript const & owner, CBalances const & balances, const CDoubleReason* reason, uint32_t blockHeight);
+    Res SubBalances(CScript const & owner, CBalances const & balances, const CDoubleReason* reason, uint32_t blockHeight);
 
     uint32_t GetBalancesHeight(CScript const & owner);
     Res UpdateBalancesHeight(CScript const & owner, uint32_t height);
@@ -102,7 +102,7 @@ public:
 
 private:
     Res SetBalance(CScript const & owner, CTokenAmount amount);
-    Res SetDetailedBalance(CScript const & owner, std::vector<std::pair<CDoubleReason, CTokenAmount>> amount);
+    Res SetDetailedBalance(CScript const & owner, std::vector<std::pair<CDoubleReason, CTokenAmount>> amount, uint32_t blockHeight);
 };
 
 #endif //DEFI_MASTERNODES_ACCOUNTS_H

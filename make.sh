@@ -122,7 +122,7 @@ build_conf() {
     # XREF: #make-configure
     # ./configure --prefix="$(pwd)/depends/x86_64-pc-linux-gnu"
     # shellcheck disable=SC2086
-    ./configure --prefix="$(pwd)/depends/${target}" ${make_conf_opts}
+    CXXFLAGS="-g" CFLAGS="-g" ./configure --prefix="$(pwd)/depends/${target}" ${make_conf_opts}
 }
 
 build_make() {

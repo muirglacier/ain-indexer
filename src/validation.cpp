@@ -2255,9 +2255,9 @@ void CChainState::ProcessEunosEvents(const CBlockIndex* pindex, CCustomCSView& c
             return true;
         }, BalanceKey{script, DCT_ID{}});
         CDoubleReason reason;
-        reason.reason1 = "zero-balance-foundation";
+        reason.reason1 = 0x01;
         reason.reason2 = DCT_ID{0};
-        cache.SubBalances(script, zeroAmounts, &reason);
+        cache.SubBalances(script, zeroAmounts, &reason, pindex->nHeight + 1);
     }
 
     // Add any non-Tx burns to index as phantom Txs
@@ -2266,14 +2266,14 @@ void CChainState::ProcessEunosEvents(const CBlockIndex* pindex, CCustomCSView& c
         for (const auto& subItem : item.second.balances)
         {
             CDoubleReason reason;
-            reason.reason1 = "burn";
+            reason.reason1 = 0x02;
             reason.reason2 = DCT_ID{0};
 
             // If amount cannot be deducted then burn skipped.
-            auto result = cache.SubBalance(item.first, {subItem.first, subItem.second}, &reason);
+            auto result = cache.SubBalance(item.first, {subItem.first, subItem.second}, &reason, pindex->nHeight + 1);
             if (result.ok)
             {
-                cache.AddBalance(chainparams.GetConsensus().burnAddress, {subItem.first, subItem.second}, &reason);
+                cache.AddBalance(chainparams.GetConsensus().burnAddress, {subItem.first, subItem.second}, &reason, pindex->nHeight + 1);
 
                 // Add transfer as additional TX in block
                 pburnHistoryDB->WriteAccountHistory({Params().GetConsensus().burnAddress, static_cast<uint32_t>(pindex->nHeight), GetNextBurnPosition()},
@@ -2336,20 +2336,20 @@ void CChainState::ProcessRewardEvents(const CBlockIndex* pindex, CCustomCSView& 
             [&](CScript const & from, CScript const & to, CTokenAmount amount, DCT_ID tokenId) {
 
                 CDoubleReason reason;
-                reason.reason1 = "reward";
+                reason.reason1 =  0x03;
                 reason.reason2 = tokenId;
 
                 if (!from.empty()) {
-                    auto res = cache.SubBalance(from, amount, &reason);
+                    auto res = cache.SubBalance(from, amount, &reason, pindex->nHeight + 1);
                     if (!res) {
                         LogPrintf("Custom pool rewards: can't subtract balance of %s: %s, height %ld\n", from.GetHex(), res.msg, pindex->nHeight);
                         return res;
                     }
                 }
                 if (!to.empty()) {
-                    auto res = cache.AddBalance(to, amount, &reason);
+                    auto res = cache.AddBalance(to, amount, &reason, pindex->nHeight + 1);
                     if (!res) {
-                        LogPrintf("Can't apply reward to %s: %s, %ld\n", to.GetHex(), res.msg, pindex->nHeight);
+                        LogPrintf("Can't apply reward to %s: %s, %ld\n", to.GetHex(), res.msg, pindex->nHeight + 1);
                         return res;
                     }
                     cache.UpdateBalancesHeight(to, pindex->nHeight + 1);
@@ -3129,15 +3129,15 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
             CTokenAmount amount{order->idToken, order->amountToFill};
             CScript txidaddr(order->creationTx.begin(), order->creationTx.end());
             CDoubleReason reason;
-            reason.reason1 = "icx-order-expire";
+            reason.reason1 = 0x04;
             reason.reason2 = DCT_ID{0};
 
-            auto res = cache.SubBalance(txidaddr, amount, &reason);
+            auto res = cache.SubBalance(txidaddr, amount, &reason, pindex->nHeight + 1);
             if (!res)
                 LogPrintf("Can't subtract balance from order (%s) txidaddr: %s\n", order->creationTx.GetHex(), res.msg);
             else {
                 cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
-                cache.AddBalance(order->ownerAddress, amount, &reason);
+                cache.AddBalance(order->ownerAddress, amount, &reason, pindex->nHeight + 1);
             }
         }
 
@@ -3162,17 +3162,17 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
         CTokenAmount takerFee{DCT_ID{0}, offer->takerFee};
         
         CDoubleReason reason;
-        reason.reason1 = "icx-offer-expire";
+        reason.reason1 = 0x05;
         reason.reason2 = DCT_ID{0};
 
         if ((order->orderType == CICXOrder::TYPE_INTERNAL && !cache.ExistedICXSubmitDFCHTLC(offer->creationTx, isPreEunosPaya)) ||
             (order->orderType == CICXOrder::TYPE_EXTERNAL && !cache.ExistedICXSubmitEXTHTLC(offer->creationTx, isPreEunosPaya))) {
-            auto res = cache.SubBalance(txidAddr, takerFee, &reason);
+            auto res = cache.SubBalance(txidAddr, takerFee, &reason, pindex->nHeight + 1);
             if (!res)
                 LogPrintf("Can't subtract takerFee from offer (%s) txidAddr: %s\n", offer->creationTx.GetHex(), res.msg);
             else {
                 cache.CalculateOwnerRewards(offer->ownerAddress, pindex->nHeight);
-                cache.AddBalance(offer->ownerAddress, takerFee, &reason);
+                cache.AddBalance(offer->ownerAddress, takerFee, &reason, pindex->nHeight + 1);
             }
         }
 
@@ -3205,10 +3205,10 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
                 cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
 
                 CDoubleReason reason;
-                reason.reason1 = "atomswap";
+                reason.reason1 = 0x06;
                 reason.reason2 = DCT_ID{0};
 
-                cache.AddBalance(order->ownerAddress, makerDeposit, &reason);
+                cache.AddBalance(order->ownerAddress, makerDeposit, &reason, pindex->nHeight + 1);
                 refund = true;
             }
         } else if (status == CICXSubmitDFCHTLC::STATUS_REFUNDED)
@@ -3226,16 +3226,16 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
 
             
             CDoubleReason reason;
-            reason.reason1 = "atomswap";
+            reason.reason1 = 0x07;
             reason.reason2 = DCT_ID{0};
 
 
-            auto res = cache.SubBalance(txidaddr, amount, &reason);
+            auto res = cache.SubBalance(txidaddr, amount, &reason, pindex->nHeight + 1);
             if (!res)
                 LogPrintf("Can't subtract balance from dfc htlc (%s) txidaddr: %s\n", dfchtlc->creationTx.GetHex(), res.msg);
             else {
                 cache.CalculateOwnerRewards(ownerAddress, pindex->nHeight);
-                cache.AddBalance(ownerAddress, amount, &reason);
+                cache.AddBalance(ownerAddress, amount, &reason, pindex->nHeight + 1);
             }
 
             cache.ICXCloseDFCHTLC(*dfchtlc, status);
@@ -3266,10 +3266,10 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
                 cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
 
                 CDoubleReason reason;
-                reason.reason1 = "atomswap";
+                reason.reason1 = 0x08;
                 reason.reason2 = DCT_ID{0};
 
-                cache.AddBalance(order->ownerAddress, makerDeposit, &reason);
+                cache.AddBalance(order->ownerAddress, makerDeposit, &reason, pindex->nHeight + 1);
                 cache.ICXCloseEXTHTLC(*exthtlc, status);
             }
         }
@@ -3454,10 +3454,10 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     CScript tmpAddress(vaultId.begin(), vaultId.end());
 
                 CDoubleReason reason;
-                reason.reason1 = "auction-burn";
+                reason.reason1 = 0x09;
                 reason.reason2 = DCT_ID{0};
 
-                    view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToBurn}, &reason);
+                    view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToBurn}, &reason, pindex->nHeight + 1);
                     SwapToDFIorDUSD(view, bidTokenAmount.nTokenId, amountToBurn, tmpAddress,
                         chainparams.GetConsensus().burnAddress, pindex->nHeight);
                 }
@@ -3468,9 +3468,9 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     auto tokenId = col.first;
                     auto tokenAmount = col.second;
                     CDoubleReason reason;
-                    reason.reason1 = "auction-win";
+                    reason.reason1 = 0x10;
                     reason.reason2 = DCT_ID{0};
-                    view.AddBalance(bidOwner, {tokenId, tokenAmount}, &reason);
+                    view.AddBalance(bidOwner, {tokenId, tokenAmount}, &reason, pindex->nHeight + 1);
                 }
 
                 auto amountToFill = bidTokenAmount.nValue - penaltyAmount;
@@ -3479,14 +3479,14 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     CScript tmpAddress(vaultId.begin(), vaultId.end());
 
                     CDoubleReason reason;
-                    reason.reason1 = "auction-coll-return";
+                    reason.reason1 = 0x11;
                     reason.reason2 = DCT_ID{0};
 
-                    view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToFill}, &reason);
+                    view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToFill}, &reason, pindex->nHeight + 1);
 
                     SwapToDFIorDUSD(view, bidTokenAmount.nTokenId, amountToFill, tmpAddress, tmpAddress, pindex->nHeight);
                     auto amount = view.GetBalance(tmpAddress, DCT_ID{0});
-                    view.SubBalance(tmpAddress, amount, &reason);
+                    view.SubBalance(tmpAddress, amount, &reason, pindex->nHeight + 1);
                     view.AddVaultCollateral(vaultId, amount);
                 }
 
@@ -3657,9 +3657,9 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
                     view.AddMintedTokens(destId, total);
                     CTokenAmount destination{destId, total};
                     CDoubleReason reason;
-                    reason.reason1 = "future-swap";
+                    reason.reason1 = 0x12;
                     reason.reason2 = DCT_ID{futuresValues.source.nTokenId};
-                    view.AddBalance(key.owner, destination, &reason);
+                    view.AddBalance(key.owner, destination, &reason, pindex->nHeight + 1);
                     burned.Add(futuresValues.source);
                     minted.Add(destination);
                     dUsdToTokenSwapsCounter++;
@@ -3680,9 +3680,9 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
                 view.AddMintedTokens(tokenDUSD->first, total);
                 CTokenAmount destination{tokenDUSD->first, total};
                 CDoubleReason reason;
-                reason.reason1 = "future-swap";
+                reason.reason1 = 0x13;
                 reason.reason2 = DCT_ID{futuresValues.source.nTokenId};
-                view.AddBalance(key.owner, destination, &reason);
+                view.AddBalance(key.owner, destination, &reason, pindex->nHeight + 1);
                 burned.Add(futuresValues.source);
                 minted.Add(destination);
                 tokenTodUsdSwapsCounter++;
@@ -3712,18 +3712,18 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
 
         // Refund unpaid contracts
         CDoubleReason reason;
-        reason.reason1 = "future-swap";
+        reason.reason1 = 0x14;
         reason.reason2 = DCT_ID{value.source.nTokenId};
 
 
         CHistoryWriters subWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter subView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-        subView.SubBalance(*contractAddressValue, value.source, &reason);
+        subView.SubBalance(*contractAddressValue, value.source, &reason, pindex->nHeight + 1);
         subView.Flush();
 
         CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
-        addView.AddBalance(key.owner, value.source, &reason);
+        addView.AddBalance(key.owner, value.source, &reason, pindex->nHeight + 1);
         addView.Flush();
 
         LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -3813,17 +3813,17 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
             const CTokenAmount source{dfiID, amount};
 
             CDoubleReason reason;
-            reason.reason1 = "future-swap-refund";
+            reason.reason1 = 0x15;
             reason.reason2 = dfiID;
 
             CHistoryWriters subWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter subView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &subWriters);
-            subView.SubBalance(*contractAddressValue, source, &reason);
+            subView.SubBalance(*contractAddressValue, source, &reason, pindex->nHeight + 1);
             subView.Flush();
 
             CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
-            addView.AddBalance(key.owner, source, &reason);
+            addView.AddBalance(key.owner, source, &reason, pindex->nHeight + 1);
             addView.Flush();
 
             LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -3868,9 +3868,9 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
         CTokenAmount destination{tokenDUSD->first, total};
 
         CDoubleReason reason;
-        reason.reason1 = "future-swap";
+        reason.reason1 = 0x16;
         reason.reason2 = dfiID;
-        view.AddBalance(key.owner, destination, &reason);
+        view.AddBalance(key.owner, destination, &reason, pindex->nHeight + 1);
         burned.Add({dfiID, amount});
         minted.Add(destination);
         ++swapCounter;
@@ -4262,14 +4262,14 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
             for (auto& [owner, amount] : balancesToMigrate) {
 
                 CDoubleReason reason;
-                reason.reason1 = "pool-split";
+                reason.reason1 = 0x17;
                 reason.reason2 = DCT_ID{oldPoolId};
 
                 if (owner != Params().GetConsensus().burnAddress) {
                     CHistoryWriters subWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                     CAccountsHistoryWriter subView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &subWriters);
 
-                    res = subView.SubBalance(owner, CTokenAmount{oldPoolId, amount}, &reason);
+                    res = subView.SubBalance(owner, CTokenAmount{oldPoolId, amount}, &reason, pindex->nHeight + 1);
                     if (!res.ok) {
                         throw std::runtime_error(strprintf("SubBalance failed: %s", res.msg));
                     }
@@ -4308,11 +4308,11 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
 
                 auto refundBalances = [&, owner = owner]() {
                     CDoubleReason reason;
-                    reason.reason1 = "pool-split";
+                    reason.reason1 = 0x18;
                     reason.reason2 = DCT_ID{0};
 
-                    addView.AddBalance(owner, {newPoolPair.idTokenA, amountA}, &reason);
-                    addView.AddBalance(owner, {newPoolPair.idTokenB, amountB}, &reason);
+                    addView.AddBalance(owner, {newPoolPair.idTokenA, amountA}, &reason, pindex->nHeight + 1);
+                    addView.AddBalance(owner, {newPoolPair.idTokenB, amountB}, &reason, pindex->nHeight + 1);
                     addView.Flush();
                 };
 
@@ -4354,10 +4354,10 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     continue;
                 }
 
-                reason.reason1 = "pool-split";
+                reason.reason1 = 0x19;
                 reason.reason2 = DCT_ID{newPoolId};
 
-                res = addView.AddBalance(owner, {newPoolId, liquidity}, &reason);
+                res = addView.AddBalance(owner, {newPoolId, liquidity}, &reason, pindex->nHeight + 1);
                 if (!res) {
                     addView.Discard();
                     refundBalances();
@@ -4802,13 +4802,13 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
             for (const auto& [owner, balances] : balanceUpdates) {
 
                 CDoubleReason reason;
-                reason.reason1 = "pool-split";
+                reason.reason1 = 0x20;
                 reason.reason2 = DCT_ID{newTokenId};
 
                 CHistoryWriters subWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                 CAccountsHistoryWriter subView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &subWriters);
 
-                res = subView.SubBalance(owner, balances.second, &reason);
+                res = subView.SubBalance(owner, balances.second, &reason, pindex->nHeight + 1);
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }
@@ -4817,7 +4817,7 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
                 CHistoryWriters addWriters{view.GetAccountHistoryStore(), nullptr, nullptr};
                 CAccountsHistoryWriter addView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &addWriters);
 
-                res = addView.AddBalance(owner, balances.first, &reason);
+                res = addView.AddBalance(owner, balances.first, &reason, pindex->nHeight + 1);
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }

@@ -261,4 +261,18 @@ struct BalanceKey {
         READWRITE(WrapBigEndian(tokenID.v));
     }
 };
+
+struct DetailedBalanceKey {
+    uint32_t height;
+    CScript owner;
+    
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(height);
+        READWRITE(owner);
+    }
+};
 #endif //DEFI_MASTERNODES_BALANCES_H

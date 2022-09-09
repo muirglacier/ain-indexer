@@ -914,9 +914,9 @@ bool CCustomCSView::CalculateOwnerRewards(CScript const & owner, uint32_t target
         CalculatePoolRewards(poolId, onLiquidity, beginHeight, targetHeight,
             [&](RewardType, CTokenAmount amount, uint32_t height) {
                 CDoubleReason reason;
-                reason.reason1 = "reward";
+                reason.reason1 = 0x21;
                 reason.reason2 = poolId;
-                auto res = AddBalance(owner, amount, &reason);
+                auto res = AddBalance(owner, amount, &reason, height);
                 if (!res) {
                     LogPrintf("Pool rewards: can't update balance of %s: %s, height %ld\n", owner.GetHex(), res.msg, targetHeight);
                 }
