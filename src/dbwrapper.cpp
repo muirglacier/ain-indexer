@@ -110,7 +110,8 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
     options.write_buffer_size = ceil_power_of_two(std::min(static_cast<size_t>(64)
      << 20, nCacheSize / 4)); // Max of 64mb -more is not useful
-    options.filter_policy = leveldb::NewBloomFilterPolicy(16);
+    options.filter_policy = leveldb::NewBloomFilterPolicy(26);
+    options.block_size = 4 * 1024 * 1024;
     options.compression = leveldb::kNoCompression;
     options.info_log = new CDefiLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
