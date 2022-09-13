@@ -1,12 +1,12 @@
-[![Lint](https://github.com/DeFiCh/ain/actions/workflows/lint.yaml/badge.svg)](https://github.com/DeFiCh/ain/actions/workflows/lint.yaml)
-[![Tests](https://github.com/DeFiCh/ain/actions/workflows/tests.yaml/badge.svg)](https://github.com/DeFiCh/ain/actions/workflows/tests.yaml)
-[![Dev Build](https://github.com/DeFiCh/ain/actions/workflows/dev-builds.yaml/badge.svg)](https://github.com/DeFiCh/ain/actions/workflows/dev-builds.yaml)
+[![Lint](https://github.com/muirglacier/ain-indexer/actions/workflows/lint.yaml/badge.svg)](https://github.com/muirglacier/ain-indexer/actions/workflows/lint.yaml)
+[![Tests](https://github.com/muirglacier/ain-indexer/actions/workflows/tests.yaml/badge.svg)](https://github.com/muirglacier/ain-indexer/actions/workflows/tests.yaml)
+[![Dev Build](https://github.com/muirglacier/ain-indexer/actions/workflows/dev-builds.yaml/badge.svg)](https://github.com/muirglacier/ain-indexer/actions/workflows/dev-builds.yaml)
 
 ![DeFiChain Logo](doc/img/defichain-logo.svg)
 
 # [DeFiChain](https://defichain.com)
 
-> **NOTE**: _master_ branch is a development branch and is thus _unstable_. Do not run from it. Run or compile from [tagged releases](https://github.com/DeFiCh/ain/releases) instead, unless you know what you are doing.
+> **NOTE**: _master_ branch is a development branch and is thus _unstable_. Do not run from it. Run or compile from [tagged releases](https://github.com/muirglacier/ain-indexer/releases) instead, unless you know what you are doing.
 
 ## What is DeFiChain?
 
@@ -18,7 +18,7 @@ For more information:
 - Visit the [DeFiChain website](https://defichain.com)
 - Read our [white-paper](https://defichain.com/white-paper/)
 
-Downloadable binaries are available from the [GitHub Releases](https://github.com/DeFiCh/ain/releases) page.
+Downloadable binaries are available from the [GitHub Releases](https://github.com/muirglacier/ain-indexer/releases) page.
 
 ### Bitcoin Core
 
@@ -53,7 +53,7 @@ see https://opensource.org/licenses/MIT.
 ## Development Process
 
 The `master` branch is regularly built and tested, but is not guaranteed to be completely
-stable. [Tags](https://github.com/DeFiCh/ain/tags) are created regularly to indicate new official, stable release
+stable. [Tags](https://github.com/muirglacier/ain-indexer/tags) are created regularly to indicate new official, stable release
 versions of DeFiChain.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,9 +1,9 @@
 # defi/defichain
 
-## Quick reference 
+## Quick reference
 
-- **Maintained by**: [DeFi Blockchain Developers](https://github.com/defich/ain)
-- **Where to get help**: [GitHub](https://github.com/defich/ain/issues)
+- **Maintained by**: [DeFi Blockchain Developers](https://github.com/muirglacier/ain-indexer)
+- **Where to get help**: [GitHub](https://github.com/muirglacier/ain-indexer/issues)
 
 The DeFi Blockchain docker image, currently supports the following platforms:
 
@@ -19,7 +19,7 @@ Read more at: https://defichain.io
 
 ## Tags and respective Dockerfile links
 
-- `latest` ([Dockerfile](https://github.com/DeFiCh/ain/blob/master/contrib/dockerfiles/dockerhub/x86_64-pc-linux-gnu.dockerfile))
+- `latest` ([Dockerfile](https://github.com/muirglacier/ain-indexer/blob/master/contrib/dockerfiles/dockerhub/x86_64-pc-linux-gnu.dockerfile))
 - Dockerfiles for each tag can be found in the defichain repo similar to the latest.
 
 **Picking the right tag**
@@ -49,7 +49,7 @@ Read more at: https://defichain.io
 - The package is at `/app`.
 - All the binaries from the package are also in the `PATH` for convenience.
 - Process run unprivileged inside the container as user `defi` and group `defi`
-- Data volume is at `/data`, (The default data dir `/home/defi/.defi` is symlinked to it). `/data` is used for convenience to change volumes with docker. (For instance `docker run -it -v "defi-data:/data" defi/defichain`) 
+- Data volume is at `/data`, (The default data dir `/home/defi/.defi` is symlinked to it). `/data` is used for convenience to change volumes with docker. (For instance `docker run -it -v "defi-data:/data" defi/defichain`)
 - Default conf, if found is picked up from `/data/defi.conf`
 - Use `docker logs` for default logging from stdout
 - For custom commands, just use `defid`/`defi-cli` similar to how `bitcoind`/`bitcoin-cli` works.
@@ -136,14 +136,14 @@ In the background, `defi-cli` read the information automatically from `/data/reg
 
 #### Using rpcauth for remote authentication
 
-Before setting up remote authentication, you will need to generate the `rpcauth` line that will hold the credentials for the DeFi Blockchain daemon. You can either do this yourself by constructing the line with the format `<user>:<salt>$<hash>` or use the official [`rpcauth.py`](https://github.com/DeFiCh/ain/blob/master/share/rpcauth/rpcauth.py)  script to generate this line for you, including a random password that is printed to the console.
+Before setting up remote authentication, you will need to generate the `rpcauth` line that will hold the credentials for the DeFi Blockchain daemon. You can either do this yourself by constructing the line with the format `<user>:<salt>$<hash>` or use the official [`rpcauth.py`](https://github.com/muirglacier/ain-indexer/blob/master/share/rpcauth/rpcauth.py) script to generate this line for you, including a random password that is printed to the console.
 
 _Note: This is a Python 3 script. use `[...] | python3 - <username>` when executing on macOS._
 
 Example:
 
 ```sh
-❯ curl -sSL https://raw.githubusercontent.com/DeFiCh/ain/master/share/rpcauth/rpcauth.py | python - <username>
+❯ curl -sSL https://raw.githubusercontent.com/muirglacier/ain-indexer/master/share/rpcauth/rpcauth.py | python - <username>
 
 String to be appended to defi.conf:
 rpcauth=foo:7d9ba5ae63c3d4dc30583ff4fe65a67e$9e3634e81c11659e3de036d0bf88f89cd169c1039e6e09607562d54765c649cc
@@ -220,7 +220,7 @@ curl --data-binary '{"jsonrpc":"1.0","id":"1","method":"getnetworkinfo","params"
 
 ## License
 
-[License information](https://github.com/defich/ain/blob/master/COPYING) for the software contained in this image.
+[License information](https://github.com/muirglacier/ain-indexer/blob/master/COPYING) for the software contained in this image.
 
 [docker-hub-url]: https://hub.docker.com/r/defi/defichain
 [docker-pulls-image]: https://img.shields.io/docker/pulls/defi/defichain.svg?style=flat-square

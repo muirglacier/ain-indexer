@@ -1,14 +1,13 @@
-Building DeFi Blockchain with Visual Studio
-========================================
+# Building DeFi Blockchain with Visual Studio
 
-Introduction
----------------------
+## Introduction
+
 Solution and project files to build DeFi Blockchain applications (except Qt dependent ones) with Visual Studio 2017 can be found in the build_msvc directory.
 
 Building with Visual Studio is an alternative to the Linux based [cross-compiler build](../doc/build-windows.md).
 
-Dependencies
----------------------
+## Dependencies
+
 A number of [open source libraries](../doc/dependencies.md) are required in order to be able to build the DeFi Blockchain.
 
 Options for installing the dependencies in a Visual Studio compatible manner are:
@@ -26,12 +25,13 @@ The external dependencies required for the Visual Studio build are (see [depende
 - ZeroMQ
 - RapidCheck
 
-Additional dependencies required from the [DeFi Blockchain](https://github.com/defich/ain) GitHub repository are:
+Additional dependencies required from the [DeFi Blockchain](https://github.com/muirglacier/ain-indexer) GitHub repository are:
+
 - libsecp256k1
 - LevelDB
 
-Building
----------------------
+## Building
+
 The instructions below use `vcpkg` to install the dependencies.
 
 - Clone `vcpkg` from the [github repository](https://github.com/Microsoft/vcpkg) and install as per the instructions in the main README.md.
@@ -41,7 +41,7 @@ The instructions below use `vcpkg` to install the dependencies.
     PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb rapidcheck
 ```
 
-- Use Python to generate *.vcxproj from Makefile
+- Use Python to generate \*.vcxproj from Makefile
 
 ```
     PS >py -3 msvc-autogen.py

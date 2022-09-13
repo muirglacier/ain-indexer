@@ -1,5 +1,4 @@
-UNIX BUILD NOTES
-====================
+# UNIX BUILD NOTES
 
 > NOTE: This section is a work in progress for DeFi Blockchain, and may not be applicable at it's current state.
 
@@ -7,18 +6,17 @@ Some notes on how to build DeFi Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
-Note
----------------------
+## Note
+
 Always use absolute paths to configure and compile DeFi Core and the dependencies.
 For example, when specifying the path of the dependency:
 
-	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
 
-To Build
----------------------
+## To Build
 
 ```bash
 ./autogen.sh
@@ -27,36 +25,33 @@ make
 make install # optional
 ```
 
-Dependencies
----------------------
+## Dependencies
 
 These dependencies are required:
 
- Library     | Purpose          | Description
- ------------|------------------|----------------------
- libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
- libboost    | Utility          | Library for threading, data structures, etc
- libevent    | Networking       | OS independent asynchronous networking
+| Library  | Purpose    | Description                                           |
+| -------- | ---------- | ----------------------------------------------------- |
+| libssl   | Crypto     | Random Number Generation, Elliptic Curve Cryptography |
+| libboost | Utility    | Library for threading, data structures, etc           |
+| libevent | Networking | OS independent asynchronous networking                |
 
 Optional dependencies:
 
- Library     | Purpose          | Description
- ------------|------------------|----------------------
- miniupnpc   | UPnP Support     | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
- protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
- univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
+| Library   | Purpose          | Description                                                                                                |
+| --------- | ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| miniupnpc | UPnP Support     | Firewall-jumping support                                                                                   |
+| libdb4.8  | Berkeley DB      | Wallet storage (only needed when wallet enabled)                                                           |
+| protobuf  | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)                           |
+| univalue  | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure) |
+| libzmq3   | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)                              |
 
 For the versions used, see [dependencies.md](dependencies.md)
 
-Memory Requirements
---------------------
+## Memory Requirements
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
 memory available when compiling DeFi Core. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
-
 
     ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
@@ -92,8 +87,7 @@ pass `--with-incompatible-bdb` to configure.
 
 Otherwise, you can build from self-compiled `depends` (see above).
 
-To build DeFi Core without wallet, see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)
-
+To build DeFi Core without wallet, see [_Disable-wallet mode_](/doc/build-unix.md#disable-wallet-mode)
 
 Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
 
@@ -119,26 +113,22 @@ ZMQ dependencies (provides ZMQ API):
 
     sudo dnf install zeromq-devel
 
-Notes
------
+## Notes
+
 The release is built with GCC and then "strip defid" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
+## miniupnpc
 
-miniupnpc
----------
+[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping. It can be downloaded from [here](http://miniupnp.tuxfamily.org/files/). UPnP support is compiled in and
+turned off by default. See the configure options for upnp behavior desired:
 
-[miniupnpc](http://miniupnp.free.fr/) may be used for UPnP port mapping.  It can be downloaded from [here](
-http://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
+    --without-miniupnpc      No UPnP support miniupnp not required
+    --disable-upnp-default   (the default) UPnP support turned off by default at runtime
+    --enable-upnp-default    UPnP support turned on by default at runtime
 
-	--without-miniupnpc      No UPnP support miniupnp not required
-	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
-	--enable-upnp-default    UPnP support turned on by default at runtime
+## Berkeley DB
 
-
-Berkeley DB
------------
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [the installation script included in contrib/](/contrib/install_db4.sh)
 like so:
@@ -149,65 +139,64 @@ like so:
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [_Disable-wallet mode_](/doc/build-unix.md#disable-wallet-mode)).
 
-Boost
------
+## Boost
+
 If you need to build Boost yourself:
 
-	sudo su
-	./bootstrap.sh
-	./bjam install
+    sudo su
+    ./bootstrap.sh
+    ./bjam install
 
+## Security
 
-Security
---------
 To help make your DeFi Core installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
 Hardening Flags:
 
-	./configure --enable-hardening
-	./configure --disable-hardening
-
+    ./configure --enable-hardening
+    ./configure --disable-hardening
 
 Hardening enables the following features:
-* _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
-    offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
-    location are thwarted if they don't know where anything useful is located.
-    The stack and heap are randomly located by default, but this allows the code section to be
-    randomly located as well.
 
-    On an AMD64 processor where a library was not compiled with -fPIC, this will cause an error
-    such as: "relocation R_X86_64_32 against `......' can not be used when making a shared object;"
+- _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
+  offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
+  location are thwarted if they don't know where anything useful is located.
+  The stack and heap are randomly located by default, but this allows the code section to be
+  randomly located as well.
 
-    To test that you have built PIE executable, install scanelf, part of paxutils, and use:
+  On an AMD64 processor where a library was not compiled with -fPIC, this will cause an error
+  such as: "relocation R_X86_64_32 against `......' can not be used when making a shared object;"
+
+  To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
         scanelf -e ./defi
 
-    The output should contain:
+  The output should contain:
 
-     TYPE
-    ET_DYN
+  TYPE
+  ET_DYN
 
-* _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, DeFi Core should be built with a non-executable stack,
-    but if one of the libraries it uses asks for an executable stack or someone makes a mistake
-    and uses a compiler extension which requires an executable stack, it will silently build an
-    executable without the non-executable stack protection.
+- _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
+  vulnerable buffers are found. By default, DeFi Core should be built with a non-executable stack,
+  but if one of the libraries it uses asks for an executable stack or someone makes a mistake
+  and uses a compiler extension which requires an executable stack, it will silently build an
+  executable without the non-executable stack protection.
 
-    To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./defi`
+  To verify that the stack is non-executable after compiling use:
+  `scanelf -e ./defi`
 
-    The output should contain:
-	STK/REL/PTL
-	RW- R-- RW-
+  The output should contain:
+  STK/REL/PTL
+  RW- R-- RW-
 
-    The STK RW- means that the stack is readable and writeable but not executable.
+  The STK RW- means that the stack is readable and writeable but not executable.
 
-Disable-wallet mode
---------------------
+## Disable-wallet mode
+
 When the intention is to run only a P2P node without a wallet, DeFi Core may be compiled in
 disable-wallet mode with:
 
@@ -217,19 +206,18 @@ In this case there is no dependency on Berkeley DB 4.8.
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
-Additional Configure Flags
---------------------------
+## Additional Configure Flags
+
 A list of additional configure flags can be displayed with:
 
     ./configure --help
 
+## Setup and Build Example: Arch Linux
 
-Setup and Build Example: Arch Linux
------------------------------------
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
-    git clone https://github.com/defich/ain.git
+    git clone https://github.com/muirglacier/ain-indexer.git
     cd ain/
     ./autogen.sh
     ./configure --disable-wallet --without-miniupnpc
@@ -242,9 +230,8 @@ or building and depending on a local version of Berkeley DB 4.8. The readily ava
 As mentioned above, when maintaining portability of the wallet between the standard DeFi Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
 
+## ARM Cross-compilation
 
-ARM Cross-compilation
--------------------
 These steps can be performed on, for example, an Ubuntu VM. The depends system
 will also work on other Linux distributions, however the commands for
 installing the toolchain will be different.
@@ -262,6 +249,5 @@ To build executables for ARM:
     ./autogen.sh
     ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
     make
-
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.

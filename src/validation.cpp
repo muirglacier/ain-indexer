@@ -4098,8 +4098,8 @@ void ConsolidateRewards(CCustomCSView &view, int height,
     std::atomic<uint64_t> reportedTs{0};
 
     for (auto& [owner, amount] : items) {
-        // See https://github.com/DeFiCh/ain/pull/1291
-        // https://github.com/DeFiCh/ain/pull/1291#issuecomment-1137638060
+        // See https://github.com/muirglacier/ain-indexer/pull/1291
+        // https://github.com/muirglacier/ain-indexer/pull/1291#issuecomment-1137638060
         // Technically not fully synchronized, but avoid races
         // due to the segregated areas of operation.
         boost::asio::post(workerPool, [&, &account = owner]() {

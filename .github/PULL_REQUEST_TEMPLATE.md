@@ -1,7 +1,7 @@
-<!-- 
+<!--
 Thanks for sending a pull request!
 
-Check out our contributing guidelines, https://github.com/DeFiCh/ain/blob/master/CONTRIBUTING.md
+Check out our contributing guidelines, https://github.com/muirglacier/ain-indexer/blob/master/CONTRIBUTING.md
 
 Pull requests without a rationale and clear improvement may be closed immediately.
 DeFiChain has a thorough review process and even the most trivial change needs to pass a lot of eyes and requires non-zero or even substantial time effort to review.

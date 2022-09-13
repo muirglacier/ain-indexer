@@ -1,5 +1,4 @@
-Contributing to DeFi Blockchain
-============================
+# Contributing to DeFi Blockchain
 
 The DeFi Blockchain project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
@@ -15,12 +14,10 @@ merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
 If you're looking for somewhere to start contributing, check out the
-[good first issue](https://github.com/defich/ain/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[good first issue](https://github.com/muirglacier/ain-indexer/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 list.
 
-
-Contributor Workflow
---------------------
+## Contributor Workflow
 
 The codebase is maintained using the "contributor workflow" where everyone
 without exception contributes patch proposals using "pull requests". This
@@ -28,9 +25,9 @@ facilitates social contribution, easy testing and peer review.
 
 To contribute a patch, the workflow is as follows:
 
-  1. Fork repository
-  1. Create topic branch
-  1. Commit patches
+1. Fork repository
+1. Create topic branch
+1. Commit patches
 
 The project coding conventions in the [developer notes](doc/developer-notes.md)
 must be adhered to.
@@ -55,25 +52,25 @@ Commit messages should never contain any `@` mentions.
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
 about Git.
 
-  - Push changes to your fork
-  - Create pull request
+- Push changes to your fork
+- Create pull request
 
 The title of the pull request should be prefixed by the component or area that
 the pull request affects. Valid areas as:
 
-  - `consensus` for changes to consensus critical code
-  - `doc` for changes to the documentation
-  - `qt` or `gui` for changes to defi-qt
-  - `log` for changes to log messages
-  - `mining` for changes to the mining code
-  - `net` or `p2p` for changes to the peer-to-peer network code
-  - `refactor` for structural changes that do not change behavior
-  - `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
-  - `script` for changes to the scripts and tools
-  - `test` for changes to DeFi Blockchain unit tests or QA tests
-  - `util` or `lib` for changes to the utils or libraries
-  - `wallet` for changes to the wallet code
-  - `build` for changes to the GNU Autotools, reproducible builds or CI code
+- `consensus` for changes to consensus critical code
+- `doc` for changes to the documentation
+- `qt` or `gui` for changes to defi-qt
+- `log` for changes to log messages
+- `mining` for changes to the mining code
+- `net` or `p2p` for changes to the peer-to-peer network code
+- `refactor` for structural changes that do not change behavior
+- `rpc`, `rest` or `zmq` for changes to the RPC, REST or ZMQ APIs
+- `script` for changes to the scripts and tools
+- `test` for changes to DeFi Blockchain unit tests or QA tests
+- `util` or `lib` for changes to the utils or libraries
+- `wallet` for changes to the wallet code
+- `build` for changes to the GNU Autotools, reproducible builds or CI code
 
 Examples:
 
@@ -83,7 +80,7 @@ Examples:
     log: Fix typo in log message
 
 Note that translations should not be submitted as pull requests, please see
-[Translation Process](https://github.com/defich/ain/blob/master/doc/translation_process.md)
+[Translation Process](https://github.com/muirglacier/ain-indexer/blob/master/doc/translation_process.md)
 for more information on helping with translations.
 
 If a pull request is not to be considered for merging (yet), please
@@ -101,8 +98,8 @@ to your fork until you have satisfied all feedback.
 
 Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NAK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
 
-Squashing Commits
----------------------------
+## Squashing Commits
+
 If your pull request is accepted for merging, you may be asked by a maintainer
 to squash and or [rebase](https://git-scm.com/docs/git-rebase) your commits
 before it will be merged. The basic squashing workflow is shown below.
@@ -131,15 +128,12 @@ the respective change set.
 The length of time required for peer review is unpredictable and will vary from
 pull request to pull request.
 
-
-Pull Request Philosophy
------------------------
+## Pull Request Philosophy
 
 Patchsets should always be focused. For example, a pull request could add a
 feature, fix a bug, or refactor code; but not a mixture. Please also avoid super
 pull requests which attempt to do too much, are overly large, or overly complex
 as this makes review difficult.
-
 
 ### Features
 
@@ -148,7 +142,6 @@ and maintenance that feature may require after inclusion. Before proposing a new
 feature that will require maintenance, please consider if you are willing to
 maintain it (including bug fixing). If features get orphaned with no maintainer
 in the future, they may be removed by the Repository Maintainer.
-
 
 ### Refactoring
 
@@ -172,9 +165,7 @@ Trivial pull requests or pull requests that refactor the code with no clear
 benefits may be immediately closed by the maintainers to reduce unnecessary
 workload on reviewing.
 
-
-"Decision Making" Process
--------------------------
+## "Decision Making" Process
 
 The following applies to code changes to the DeFi Blockchain project (and related
 projects such as libsecp256k1), and is not to be confused with overall DeFi
@@ -189,15 +180,15 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - Have a clear use case, fix a demonstrable bug or serve the greater good of
-    the project (for example refactoring for modularisation);
-  - Be well peer reviewed;
-  - Have unit tests and functional tests where appropriate;
-  - Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
-  - Not break the existing test suite;
-  - Where bugs are fixed, where possible, there should be unit tests
-    demonstrating the bug and also proving the fix. This helps prevent regression.
-  - Change relevant comments and documentation when behaviour of code changes.
+- Have a clear use case, fix a demonstrable bug or serve the greater good of
+  the project (for example refactoring for modularisation);
+- Be well peer reviewed;
+- Have unit tests and functional tests where appropriate;
+- Follow code style guidelines ([C++](doc/developer-notes.md), [functional tests](test/functional/README.md));
+- Not break the existing test suite;
+- Where bugs are fixed, where possible, there should be unit tests
+  demonstrating the bug and also proving the fix. This helps prevent regression.
+- Change relevant comments and documentation when behaviour of code changes.
 
 Patches that change DeFi Blockchain consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
@@ -205,7 +196,6 @@ extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
 other kinds of patches because of increased peer review and consensus building
 requirements.
-
 
 ### Peer Review
 
@@ -219,10 +209,11 @@ spread out over GitHub, mailing list and IRC discussions).
 #### Conceptual Review
 
 A review can be a conceptual review, where the reviewer leaves a comment
- * `Concept (N)ACK`, meaning "I do (not) agree in the general goal of this pull
-   request",
- * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
-   approach of this change".
+
+- `Concept (N)ACK`, meaning "I do (not) agree in the general goal of this pull
+  request",
+- `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
+  approach of this change".
 
 A `NACK` needs to include a rationale why the change is not worthwhile.
 NACKs without accompanying reasoning may be disregarded.
@@ -235,13 +226,13 @@ topic branch. The review is followed by a description of how the reviewer did
 the review. The following
 language is used within pull-request comments:
 
-  - "I have tested the code", involving
-    change-specific manual testing in addition to running the unit and functional
-    tests, and in case it is not obvious how the manual testing was done, it should
-    be described;
-  - "I have not tested the code, but I have reviewed it and it looks
-    OK, I agree it can be merged";
-  - Nit refers to trivial, often non-blocking issues.
+- "I have tested the code", involving
+  change-specific manual testing in addition to running the unit and functional
+  tests, and in case it is not obvious how the manual testing was done, it should
+  be described;
+- "I have not tested the code, but I have reviewed it and it looks
+  OK, I agree it can be merged";
+- Nit refers to trivial, often non-blocking issues.
 
 Project maintainers reserve the right to weigh the opinions of peer reviewers
 using common sense judgement and also may weight based on meritocracy: Those
@@ -267,37 +258,34 @@ that you've been waiting for a pull request to be given attention for several
 months, there may be a number of reasons for this, some of which you can do something
 about:
 
-  - It may be because of a feature freeze due to an upcoming release. During this time,
-    only bug fixes are taken into consideration. If your pull request is a new feature,
-    it will not be prioritized until the release is over. Wait for release.
-  - It may be because the changes you are suggesting do not appeal to people. Rather than
-    nits and critique, which require effort and means they care enough to spend time on your
-    contribution, thundering silence is a good sign of widespread (mild) dislike of a given change
-    (because people don't assume *others* won't actually like the proposal). Don't take
-    that personally, though! Instead, take another critical look at what you are suggesting
-    and see if it: changes too much, is too broad, doesn't adhere to the
-    [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
-    Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
-    their opinion on the concept itself.
-  - It may be because your code is too complex for all but a few people. And those people
-    may not have realized your pull request even exists. A great way to find people who
-    are qualified and care about the code you are touching is the
-    [Git Blame feature](https://help.github.com/articles/tracing-changes-in-a-file/). Simply
-    find the person touching the code you are touching before you and see if you can find
-    them and give them a nudge. Don't be incessant about the nudging though.
-  - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
-    a look. If you think you've been waiting an unreasonably long amount of time (month+) for
-    no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
-    when someone else is asking for feedback on their code, and universe balances out.
+- It may be because of a feature freeze due to an upcoming release. During this time,
+  only bug fixes are taken into consideration. If your pull request is a new feature,
+  it will not be prioritized until the release is over. Wait for release.
+- It may be because the changes you are suggesting do not appeal to people. Rather than
+  nits and critique, which require effort and means they care enough to spend time on your
+  contribution, thundering silence is a good sign of widespread (mild) dislike of a given change
+  (because people don't assume _others_ won't actually like the proposal). Don't take
+  that personally, though! Instead, take another critical look at what you are suggesting
+  and see if it: changes too much, is too broad, doesn't adhere to the
+  [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
+  Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
+  their opinion on the concept itself.
+- It may be because your code is too complex for all but a few people. And those people
+  may not have realized your pull request even exists. A great way to find people who
+  are qualified and care about the code you are touching is the
+  [Git Blame feature](https://help.github.com/articles/tracing-changes-in-a-file/). Simply
+  find the person touching the code you are touching before you and see if you can find
+  them and give them a nudge. Don't be incessant about the nudging though.
+- Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
+  a look. If you think you've been waiting an unreasonably long amount of time (month+) for
+  no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
+  when someone else is asking for feedback on their code, and universe balances out.
 
-
-Release Policy
---------------
+## Release Policy
 
 The project leader is the release manager for each DeFi Blockchain release.
 
-Copyright
----------
+## Copyright
 
 By contributing to this repository, you agree to license your work under the
 MIT license unless specified otherwise in `contrib/debian/copyright` or at
