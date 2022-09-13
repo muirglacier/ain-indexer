@@ -3,6 +3,6 @@
 set -ex
 
 # Generate defi.conf
-/usr/bin/dfi_init
+/app/bin/dfi_init
 
-exec /usr/bin/defid -datadir=/blockchain
+exec /app/bin/defid -datadir=/blockchain
