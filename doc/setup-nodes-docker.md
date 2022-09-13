@@ -1,4 +1,4 @@
-# defi/defichain
+# muirglacier/ain
 
 ## Quick reference
 
@@ -9,7 +9,7 @@ The DeFi Blockchain docker image, currently supports the following platforms:
 
 - `amd64` (x86_64)
 
-<!-- [![defi/defichain][docker-pulls-image]][docker-hub-url] [![defi/defichain][docker-stars-image]][docker-hub-url] -->
+<!-- [![muirglacier/ain][docker-pulls-image]][docker-hub-url] [![muirglacier/ain][docker-stars-image]][docker-hub-url] -->
 
 ## What is DeFi Blockchain?
 
@@ -24,8 +24,8 @@ Read more at: https://defichain.io
 
 **Picking the right tag**
 
-- `defi/defichain:latest`: points to the latest stable release available of DeFi Blockchain. Use this only if you know what you're doing as upgrading DeFi Blockchain blindly can be risky in odd cases, though it usually shouldn't be.
-- `defi/defichain:<version>`: based on a slim Debian image, points to a specific version branch or release of DeFi Blockchain. Uses the pre-compiled binaries which are fully tested by the DeFi Blockchain Team.
+- `muirglacier/ain:latest`: points to the latest stable release available of DeFi Blockchain. Use this only if you know what you're doing as upgrading DeFi Blockchain blindly can be risky in odd cases, though it usually shouldn't be.
+- `muirglacier/ain:<version>`: based on a slim Debian image, points to a specific version branch or release of DeFi Blockchain. Uses the pre-compiled binaries which are fully tested by the DeFi Blockchain Team.
 
 ## Usage
 
@@ -34,13 +34,13 @@ Read more at: https://defichain.io
 #### Service
 
 ```sh
-❯ docker run -d defi/defichain
+❯ docker run -d muirglacier/ain
 ```
 
 #### Interactive
 
 ```sh
-❯ docker run -it defi/defichain
+❯ docker run -it muirglacier/ain
 ```
 
 ### Image details
@@ -49,7 +49,7 @@ Read more at: https://defichain.io
 - The package is at `/app`.
 - All the binaries from the package are also in the `PATH` for convenience.
 - Process run unprivileged inside the container as user `defi` and group `defi`
-- Data volume is at `/data`, (The default data dir `/home/defi/.defi` is symlinked to it). `/data` is used for convenience to change volumes with docker. (For instance `docker run -it -v "defi-data:/data" defi/defichain`)
+- Data volume is at `/data`, (The default data dir `/home/defi/.defi` is symlinked to it). `/data` is used for convenience to change volumes with docker. (For instance `docker run -it -v "defi-data:/data" muirglacier/ain`)
 - Default conf, if found is picked up from `/data/defi.conf`
 - Use `docker logs` for default logging from stdout
 - For custom commands, just use `defid`/`defi-cli` similar to how `bitcoind`/`bitcoin-cli` works.
@@ -65,7 +65,7 @@ Read more at: https://defichain.io
 Example:
 
 ```sh
-❯ docker run --rm -it defi/defichain \
+❯ docker run --rm -it muirglacier/ain \
   defid \
   -printtoconsole \
   -regtest=1 \
@@ -78,7 +78,7 @@ _Note: More about how `-rpcauth` works for remote authentication are explained b
 You can also mount a directory in a volume under `/data` in case you want to access it on the host:
 
 ```sh
-❯ docker run -v ${PWD}/data-dir:/data -it --rm defi/defichain \
+❯ docker run -v ${PWD}/data-dir:/data -it --rm muirglacier/ain \
   defid \
   -printtoconsole \
   -regtest=1
@@ -88,7 +88,7 @@ You can optionally create a service using `docker-compose`:
 
 ```yml
 defichain:
-  image: defi/defichain
+  image: muirglacier/ain
   command: >
     defid
     -printtoconsole
@@ -108,7 +108,7 @@ The second option is making a remote procedure call using a username and passwor
 Start by launching the DeFi Blockchain daemon:
 
 ```sh
-❯ docker run --rm --name defi-node -it defi/defichain \
+❯ docker run --rm --name defi-node -it muirglacier/ain \
   defid \
   -printtoconsole \
   -regtest=1
@@ -156,7 +156,7 @@ Note that for each run, even if the username remains the same, the output will b
 Now that you have your credentials, you need to start the DeFi Blockchain daemon with the `-rpcauth` option. Alternatively, you could append the line to a `defi.conf` file and mount it on the container.
 
 ```sh
-❯ docker run --rm --name defi-node -it defi/defichain \
+❯ docker run --rm --name defi-node -it muirglacier/ain \
   defid \
   -printtoconsole \
   -regtest=1 \
@@ -174,7 +174,7 @@ You can now connect via `defi-cli`. You will still have to define a username and
 To avoid any confusion about whether or not a remote call is being made, let's spin up another container to execute `defi-cli` and connect it via the Docker network using the password generated above:
 
 ```sh
-❯ docker run -it --link defi-node --rm defi/defichain \
+❯ docker run -it --link defi-node --rm muirglacier/ain \
   defi-cli \
   -rpcconnect=defi-node \
   -regtest \
@@ -203,7 +203,7 @@ For example,
 docker run --rm -it \
   -p 19554:19554 \
   -p 19555:19555 \
-  defi/defichain \
+  muirglacier/ain \
   defid \
   -printtoconsole \
   -regtest=1 \
@@ -222,6 +222,6 @@ curl --data-binary '{"jsonrpc":"1.0","id":"1","method":"getnetworkinfo","params"
 
 [License information](https://github.com/muirglacier/ain-indexer/blob/master/COPYING) for the software contained in this image.
 
-[docker-hub-url]: https://hub.docker.com/r/defi/defichain
-[docker-pulls-image]: https://img.shields.io/docker/pulls/defi/defichain.svg?style=flat-square
-[docker-stars-image]: https://img.shields.io/docker/stars/defi/defichain.svg?style=flat-square
+[docker-hub-url]: https://hub.docker.com/r/muirglacier/ain
+[docker-pulls-image]: https://img.shields.io/docker/pulls/muirglacier/ain.svg?style=flat-square
+[docker-stars-image]: https://img.shields.io/docker/stars/muirglacier/ain.svg?style=flat-square

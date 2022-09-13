@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -ex
+
+# Generate defi.conf
+/usr/bin/dfi_init
+
+exec /usr/bin/defid -datadir=/blockchain

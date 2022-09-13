@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
           path: ./contrib/dockerfiles/dockerhub
           dockerfile: ./contrib/dockerfiles/dockerhub/x86_64-pc-linux-gnu.dockerfile
-          repository: defi/defichain
+          repository: muirglacier/ain
           tags: latest,${{ env.BUILD_VERSION }}
 
   windows:
