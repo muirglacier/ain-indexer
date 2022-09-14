@@ -117,7 +117,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
-        options.paranoid_checks = true;
+        options.paranoid_checks = false;
     }
     SetMaxOpenFiles(&options);
     return options;
@@ -127,8 +127,8 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
     : m_name{path.stem().string()}
 {
     penv = nullptr;
-    readoptions.verify_checksums = true;
-    iteroptions.verify_checksums = true;
+    readoptions.verify_checksums = false;
+    iteroptions.verify_checksums = false;
     iteroptions.fill_cache = false;
     syncoptions.sync = true;
     options = GetOptions(nCacheSize);
