@@ -102,6 +102,18 @@ Res CAccountsHistoryView::EraseAccountHistory(const AccountHistoryKey& key)
     return Res::Ok();
 }
 
+std::vector<HistoryStruct> CAccountsHistoryView::GetAccountHistoryHeight(uint32_t height)
+{
+    std::vector<HistoryStruct> history;
+
+    auto it = LowerBound<ByAccountHistoryKeyNew>(AccountHistoryKeyNew{height, {}, ~0u});
+    for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
+        history.push_back(HistoryStruct{it.Key(), it.Value()});
+    }
+
+    return history;
+}
+
 Res CAccountsHistoryView::EraseAccountHistoryHeight(uint32_t height)
 {
     std::vector<AccountHistoryKey> keysToDelete;

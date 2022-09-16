@@ -56,6 +56,11 @@ struct AccountHistoryValue {
     }
 };
 
+struct HistoryStruct {
+    AccountHistoryKey key;
+    AccountHistoryValue value;
+}
+
 class CAccountsHistoryView : public virtual CStorageView
 {
 public:
@@ -64,6 +69,7 @@ public:
     [[nodiscard]] std::optional<AccountHistoryValue> ReadAccountHistory(AccountHistoryKey const & key) const;
     Res WriteAccountHistory(AccountHistoryKey const & key, AccountHistoryValue const & value);
     Res EraseAccountHistory(AccountHistoryKey const & key);
+    std::vector<HistoryStruct> GetAccountHistoryHeight(uint32_t height);
     void ForEachAccountHistory(std::function<bool(AccountHistoryKey const &, AccountHistoryValue)> callback,
                                const CScript& owner = {}, uint32_t height = std::numeric_limits<uint32_t>::max(), uint32_t txn = std::numeric_limits<uint32_t>::max());
 

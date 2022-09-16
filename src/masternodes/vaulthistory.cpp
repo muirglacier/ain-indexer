@@ -21,6 +21,20 @@ void CVaultHistoryView::WriteGlobalScheme(VaultGlobalSchemeKey const & key, cons
     WriteBy<ByVaultGlobalSchemeKey>(key, value);
 }
 
+std::vector<VaultStruct>CVaultHistoryView::GetVaultHistoryHeight(uint32_t height)
+{
+    std::vector<VaultStruct> history;
+
+    auto it = LowerBound<ByAccountHistoryKeyNew>(AccountHistoryKeyNew{height, {}, ~0u});
+    for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
+        const auto stateKey = VaultStateKey{key.vaultID, key.blockHeight};
+        const auto state = ReadBy<ByVaultStateKey>(stateKey);
+        history.push_back(VaultStruct{it.Key(), it.Value(), state});
+    }
+
+    return history;
+}
+
 void CVaultHistoryView::EraseVaultHistory(const uint32_t height)
 {
     std::vector<VaultHistoryKey> keys;

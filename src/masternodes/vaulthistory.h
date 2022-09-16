@@ -156,6 +156,13 @@ struct VaultGlobalSchemeValue {
     }
 };
 
+struct VaultStruct {
+    VaultHistoryKey key;
+    VaultHistoryValue value;
+    VaultStateValue state;
+    
+}
+
 class CVaultHistoryView : public virtual CStorageView
 {
 public:
@@ -164,6 +171,7 @@ public:
     void WriteVaultState(CCustomCSView& mnview, const CBlockIndex& pindex, const uint256& vaultID, const uint32_t ratio = 0);
 
     void EraseVaultHistory(const uint32_t height);
+    std::vector<VaultStruct> GetVaultHistoryHeight(uint32_t height);
 
     void ForEachVaultHistory(std::function<bool(VaultHistoryKey const &, CLazySerialize<VaultHistoryValue>)> callback, VaultHistoryKey const & start = {});
     void ForEachVaultScheme(std::function<bool(VaultSchemeKey const &, CLazySerialize<VaultSchemeValue>)> callback, VaultSchemeKey const & start = {});
