@@ -8,34 +8,7 @@
 #include <masternodes/vaulthistory.h>
 #include <key_io.h>
 
-struct AccountHistoryKeyNew {
-    uint32_t blockHeight;
-    CScript owner;
-    uint32_t txn; // for order in block
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        if (ser_action.ForRead()) {
-            READWRITE(WrapBigEndian(blockHeight));
-            blockHeight = ~blockHeight;
-        } else {
-            uint32_t blockHeight_ = ~blockHeight;
-            READWRITE(WrapBigEndian(blockHeight_));
-        }
-
-        READWRITE(owner);
-
-        if (ser_action.ForRead()) {
-            READWRITE(WrapBigEndian(txn));
-            txn = ~txn;
-        } else {
-            uint32_t txn_ = ~txn;
-            READWRITE(WrapBigEndian(txn_));
-        }
-    }
-};
 
 static AccountHistoryKeyNew Convert(AccountHistoryKey const & key) {
     return {key.blockHeight, key.owner, key.txn};
