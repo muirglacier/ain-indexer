@@ -2543,7 +2543,7 @@ UniValue getaccountsforblock(const JSONRPCRequest& request) {
     CCustomCSView view(*pcustomcsview);
     UniValue valarr{UniValue::VARR};
 
-    const std::vector<HistoryStruct> undo = view.GetAccountHistoryHeight(height);
+    const std::vector<HistoryStruct> undo = paccountHistoryDB->GetAccountHistoryHeight(height);
 
     for(auto & elem : undo)
     {
@@ -2585,7 +2585,7 @@ UniValue getvaultsforblock(const JSONRPCRequest& request) {
     CCustomCSView view(*pcustomcsview);
     UniValue valarr{UniValue::VARR};
 
-    const std::vector<VaultStruct> undo = view.GetVaultHistoryHeight(height);
+    const std::vector<VaultStruct> undo = pvaultHistoryDB->GetVaultHistoryHeight(height);
 
     for(auto & elem : undo)
     {
@@ -2807,8 +2807,8 @@ static const CRPCCommand commands[] =
     {"accounts",   "listpendingdusdswaps",     &listpendingdusdswaps,      {}},
     {"accounts",   "getpendingdusdswaps",      &getpendingdusdswaps,       {"address"}},
     {"accounts",   "getundo",                  &getundo,                   {"txid", "blockHeight"}},
-    {"accounts",   "getaccountsforblock",      &getaccountsforblock,                   {"blockHeight"}},
-    {"accounts",   "getvaultsforblock",        &getvaultsforblock,                   {"blockHeight"}},
+    {"accounts",   "getaccountsforblock",      &getaccountsforblock,       {"blockHeight"}},
+    {"accounts",   "getvaultsforblock",        &getvaultsforblock,         {"blockHeight"}},
     {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
 };
 
