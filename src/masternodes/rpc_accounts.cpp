@@ -2552,7 +2552,7 @@ UniValue getaccountsforblock(const JSONRPCRequest& request) {
             CTxDestination dest;
             ExtractDestination(elem.key.owner, dest);
             std::string owner = EncodeDestination(dest);
-            value.pushKV("blockHeight", elem.key.blockHeight);
+            value.pushKV("blockHeight", (int)elem.key.blockHeight);
             value.pushKV("owner", owner);
             value.pushKV("txid", elem.value.txid.GetHex());
             value.pushKV("category", elem.value.category);
@@ -2594,7 +2594,7 @@ UniValue getvaultsforblock(const JSONRPCRequest& request) {
             CTxDestination dest;
             ExtractDestination(elem.key.address, dest);
             std::string owner = EncodeDestination(dest);
-            value.pushKV("blockHeight", elem.key.blockHeight);
+            value.pushKV("blockHeight", (int)elem.key.blockHeight);
             value.pushKV("owner", owner);
             value.pushKV("vaultid", elem.key.vaultID.GetHex());
             value.pushKV("txid", elem.value.txid.GetHex());
