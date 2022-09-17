@@ -57,7 +57,7 @@ struct AccountHistoryValue {
 };
 
 struct HistoryStruct {
-    AccountHistoryKey key;
+    AccountHistoryKeyNew key;
     AccountHistoryValue value;
 };
 
