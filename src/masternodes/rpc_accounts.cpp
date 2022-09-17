@@ -2556,7 +2556,7 @@ UniValue getaccountsforblock(const JSONRPCRequest& request) {
             value.pushKV("owner", owner);
             value.pushKV("txid", elem.value.txid);
             value.pushKV("category", elem.value.category);
-            value.pushKV("token", inner.first.v);
+            value.pushKV("token", (int)inner.first.v);
             value.pushKV("difference",  ValueFromAmount(inner.second));
             valarr.push_back(value);
         }
@@ -2599,7 +2599,7 @@ UniValue getvaultsforblock(const JSONRPCRequest& request) {
             value.pushKV("vaultid", elem.key.vaultID.GetHex());
             value.pushKV("txid", elem.value.txid);
             value.pushKV("category", elem.value.category);
-            value.pushKV("token", inner.first.v);
+            value.pushKV("token", (int)inner.first.v);
             value.pushKV("difference",  ValueFromAmount(inner.second));
             valarr.push_back(value);
         }
