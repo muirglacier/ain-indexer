@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: defid-docker
+  namespace: defid
+  labels:
+    app.kubernetes.io/name: defid-docker
+spec:
+  volumes:
+    - name: defid-local-pv
+      persistentVolumeClaim:
+        claimName: defid-pv-claim
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - defilense.com
+  containers:
+  - name: defid-docker
+    image: muirglacier/ain:latest
+    volumeMounts:
+            - name: defid-local-pv
+              mountPath: /blockchain
+    ports:
+    - containerPort: 8554
+  restartPolicy: Never
