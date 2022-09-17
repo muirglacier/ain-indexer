@@ -2554,7 +2554,7 @@ UniValue getaccountsforblock(const JSONRPCRequest& request) {
             std::string owner = EncodeDestination(dest);
             value.pushKV("blockHeight", elem.key.blockHeight);
             value.pushKV("owner", owner);
-            value.pushKV("txid", elem.value.txid);
+            value.pushKV("txid", elem.value.txid.GetHex());
             value.pushKV("category", elem.value.category);
             value.pushKV("token", (int)inner.first.v);
             value.pushKV("difference",  ValueFromAmount(inner.second));
@@ -2597,7 +2597,7 @@ UniValue getvaultsforblock(const JSONRPCRequest& request) {
             value.pushKV("blockHeight", elem.key.blockHeight);
             value.pushKV("owner", owner);
             value.pushKV("vaultid", elem.key.vaultID.GetHex());
-            value.pushKV("txid", elem.value.txid);
+            value.pushKV("txid", elem.value.txid.GetHex());
             value.pushKV("category", elem.value.category);
             value.pushKV("token", (int)inner.first.v);
             value.pushKV("difference",  ValueFromAmount(inner.second));
