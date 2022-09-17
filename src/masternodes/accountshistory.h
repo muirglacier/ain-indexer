@@ -59,7 +59,7 @@ struct AccountHistoryValue {
 struct HistoryStruct {
     AccountHistoryKey key;
     AccountHistoryValue value;
-}
+};
 
 class CAccountsHistoryView : public virtual CStorageView
 {
