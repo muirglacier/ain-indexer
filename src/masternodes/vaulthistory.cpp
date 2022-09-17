@@ -29,7 +29,7 @@ std::vector<VaultStruct>CVaultHistoryView::GetVaultHistoryHeight(uint32_t height
     for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
         const auto stateKey = VaultStateKey{it.Key().vaultID, it.Key().blockHeight};
         const auto state = ReadBy<ByVaultStateKey, VaultStateValue>(stateKey);
-        if(state.has_value)
+        if(state.has_value())
             history.push_back(VaultStruct{it.Key(), it.Value(), state.value()});
     }
 
