@@ -160,7 +160,6 @@ struct VaultStruct {
     VaultHistoryKey key;
     VaultHistoryValue value;
     VaultStateValue state;
-    
 }
 
 class CVaultHistoryView : public virtual CStorageView

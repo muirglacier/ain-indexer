@@ -1,4 +1,6 @@
 #include <masternodes/accountshistory.h>
+#include <masternodes/vaulthistory.h>
+
 #include <masternodes/govvariables/attributes.h>
 #include <masternodes/mn_rpc.h>
 #include <masternodes/undos.h>
@@ -2519,6 +2521,92 @@ UniValue getpendingdusdswaps(const JSONRPCRequest& request) {
     return GetRPCResultCache().Set(request, obj);
 }
 
+UniValue getaccountsforblock(const JSONRPCRequest& request) {
+    RPCHelpMan{"getaccountsforblock",
+               "Get specific account history information for a block height.\n",
+               {
+                       {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height"},
+               },
+               RPCResult{
+                       "{\n"
+                       "... to be added\n"
+                       "}\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("getaccountsforblock","")
+               },
+    }.Check(request);
+
+    uint32_t height = atoi(request.params[0].get_str().c_str());
+    LOCK(cs_main);
+    CCustomCSView view(*pcustomcsview);
+    UniValue valarr{UniValue::VARR};
+
+    const std::vector<HistoryStruct> undo = view.GetAccountHistoryHeight(height);
+
+    for(auto & elem : undo)
+    {
+        for(auto & inner : elem.value.diff) {
+            UniValue value{UniValue::VOBJ};
+            CTxDestination dest;
+            ExtractDestination(elem.key.owner, dest);
+            std::string owner = EncodeDestination(dest);
+            value.pushKV("blockHeight", elem.key.blockHeight);
+            value.pushKV("owner", owner);
+            value.pushKV("txid", elem.value.txid);
+            value.pushKV("category", elem.value.category);
+            value.pushKV("token", inner.first.v);
+            value.pushKV("difference",  ValueFromAmount(inner.second));
+            valarr.push_back(value);
+        }
+    }
+    return valarr;
+}
+
+UniValue getvaultsforblock(const JSONRPCRequest& request) {
+    RPCHelpMan{"getvaultsforblock",
+               "Get specific vault history information for a block height.\n",
+               {
+                       {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height"},
+               },
+               RPCResult{
+                       "{\n"
+                       "... to be added\n"
+                       "}\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("getvaultsforblock","")
+               },
+    }.Check(request);
+
+    uint32_t height = atoi(request.params[0].get_str().c_str());
+    LOCK(cs_main);
+    CCustomCSView view(*pcustomcsview);
+    UniValue valarr{UniValue::VARR};
+
+    const std::vector<VaultStruct> undo = view.GetVaultHistoryHeight(height);
+
+    for(auto & elem : undo)
+    {
+        for(auto & inner : elem.value.diff) {
+            UniValue value{UniValue::VOBJ};
+            CTxDestination dest;
+            ExtractDestination(elem.key.address, dest);
+            std::string owner = EncodeDestination(dest);
+            value.pushKV("blockHeight", elem.key.blockHeight);
+            value.pushKV("owner", owner);
+            value.pushKV("vaultid", elem.key.vaultID.GetHex());
+            value.pushKV("txid", elem.value.txid);
+            value.pushKV("category", elem.value.category);
+            value.pushKV("token", inner.first.v);
+            value.pushKV("difference",  ValueFromAmount(inner.second));
+            valarr.push_back(value);
+        }
+    }
+    return valarr;
+
+}
+
 UniValue getundo(const JSONRPCRequest& request) {
     RPCHelpMan{"getundo",
                "Get specific undo information for a transaction.\n",
@@ -2718,6 +2806,8 @@ static const CRPCCommand commands[] =
     {"accounts",   "listpendingdusdswaps",     &listpendingdusdswaps,      {}},
     {"accounts",   "getpendingdusdswaps",      &getpendingdusdswaps,       {"address"}},
     {"accounts",   "getundo",                  &getundo,                   {"txid", "blockHeight"}},
+    {"accounts",   "getaccountsforblock",      &getaccountsforblock,                   {"blockHeight"}},
+    {"accounts",   "getvaultsforblock",        &getvaultsforblock,                   {"blockHeight"}},
     {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
 };
 
