@@ -125,19 +125,19 @@ const std::map<uint8_t, std::map<std::string, uint8_t>>& ATTRIBUTES::allowedKeys
     static const std::map<uint8_t, std::map<std::string, uint8_t>> keys{
         {
             AttributeTypes::Token, {
-                {"payback_dfi",             TokenKeys::PaybackDFI},
-                {"payback_dfi_fee_pct",     TokenKeys::PaybackDFIFeePCT},
-                {"loan_payback",            TokenKeys::LoanPayback},
-                {"loan_payback_fee_pct",    TokenKeys::LoanPaybackFeePCT},
-                {"loan_payback_collateral", TokenKeys::LoanPaybackCollateral},
-                {"dex_in_fee_pct",          TokenKeys::DexInFeePct},
-                {"dex_out_fee_pct",         TokenKeys::DexOutFeePct},
-                {"dfip2203",                TokenKeys::DFIP2203Enabled},
-                {"fixed_interval_price_id", TokenKeys::FixedIntervalPriceId},
-                {"loan_collateral_enabled", TokenKeys::LoanCollateralEnabled},
-                {"loan_collateral_factor",  TokenKeys::LoanCollateralFactor},
-                {"loan_minting_enabled",    TokenKeys::LoanMintingEnabled},
-                {"loan_minting_interest",   TokenKeys::LoanMintingInterest},
+                {"payback_dfi",                  TokenKeys::PaybackDFI},
+                {"payback_dfi_fee_pct",          TokenKeys::PaybackDFIFeePCT},
+                {"loan_payback",                 TokenKeys::LoanPayback},
+                {"loan_payback_fee_pct",         TokenKeys::LoanPaybackFeePCT},
+                {"loan_payback_collateral",      TokenKeys::LoanPaybackCollateral},
+                {"dex_in_fee_pct",               TokenKeys::DexInFeePct},
+                {"dex_out_fee_pct",              TokenKeys::DexOutFeePct},
+                {"dfip2203",                     TokenKeys::DFIP2203Enabled},
+                {"fixed_interval_price_id",      TokenKeys::FixedIntervalPriceId},
+                {"loan_collateral_enabled",      TokenKeys::LoanCollateralEnabled},
+                {"loan_collateral_factor",       TokenKeys::LoanCollateralFactor},
+                {"loan_minting_enabled",         TokenKeys::LoanMintingEnabled},
+                {"loan_minting_interest",        TokenKeys::LoanMintingInterest},
             }
         },
         {
@@ -168,22 +168,22 @@ const std::map<uint8_t, std::map<uint8_t, std::string>>& ATTRIBUTES::displayKeys
     static const std::map<uint8_t, std::map<uint8_t, std::string>> keys{
         {
             AttributeTypes::Token, {
-                {TokenKeys::PaybackDFI,            "payback_dfi"},
-                {TokenKeys::PaybackDFIFeePCT,      "payback_dfi_fee_pct"},
-                {TokenKeys::LoanPayback,           "loan_payback"},
-                {TokenKeys::LoanPaybackFeePCT,     "loan_payback_fee_pct"},
-                {TokenKeys::LoanPaybackCollateral, "loan_payback_collateral"},
-                {TokenKeys::DexInFeePct,           "dex_in_fee_pct"},
-                {TokenKeys::DexOutFeePct,          "dex_out_fee_pct"},
-                {TokenKeys::FixedIntervalPriceId,  "fixed_interval_price_id"},
-                {TokenKeys::LoanCollateralEnabled, "loan_collateral_enabled"},
-                {TokenKeys::LoanCollateralFactor,  "loan_collateral_factor"},
-                {TokenKeys::LoanMintingEnabled,    "loan_minting_enabled"},
-                {TokenKeys::LoanMintingInterest,   "loan_minting_interest"},
-                {TokenKeys::DFIP2203Enabled,       "dfip2203"},
-                {TokenKeys::Ascendant,             "ascendant"},
-                {TokenKeys::Descendant,            "descendant"},
-                {TokenKeys::Epitaph,               "epitaph"},
+                {TokenKeys::PaybackDFI,                "payback_dfi"},
+                {TokenKeys::PaybackDFIFeePCT,          "payback_dfi_fee_pct"},
+                {TokenKeys::LoanPayback,               "loan_payback"},
+                {TokenKeys::LoanPaybackFeePCT,         "loan_payback_fee_pct"},
+                {TokenKeys::LoanPaybackCollateral,     "loan_payback_collateral"},
+                {TokenKeys::DexInFeePct,               "dex_in_fee_pct"},
+                {TokenKeys::DexOutFeePct,              "dex_out_fee_pct"},
+                {TokenKeys::FixedIntervalPriceId,      "fixed_interval_price_id"},
+                {TokenKeys::LoanCollateralEnabled,     "loan_collateral_enabled"},
+                {TokenKeys::LoanCollateralFactor,      "loan_collateral_factor"},
+                {TokenKeys::LoanMintingEnabled,        "loan_minting_enabled"},
+                {TokenKeys::LoanMintingInterest,       "loan_minting_interest"},
+                {TokenKeys::DFIP2203Enabled,           "dfip2203"},
+                {TokenKeys::Ascendant,                 "ascendant"},
+                {TokenKeys::Descendant,                "descendant"},
+                {TokenKeys::Epitaph,                   "epitaph"},
             }
         },
         {
@@ -345,19 +345,19 @@ const std::map<uint8_t, std::map<uint8_t,
         std::function<ResVal<CAttributeValue>(const std::string&)>>> parsers{
         {
             AttributeTypes::Token, {
-                {TokenKeys::PaybackDFI,            VerifyBool},
-                {TokenKeys::PaybackDFIFeePCT,      VerifyPct},
-                {TokenKeys::LoanPayback,           VerifyBool},
-                {TokenKeys::LoanPaybackFeePCT,     VerifyPct},
-                {TokenKeys::LoanPaybackCollateral, VerifyBool},
-                {TokenKeys::DexInFeePct,           VerifyPct},
-                {TokenKeys::DexOutFeePct,          VerifyPct},
-                {TokenKeys::FixedIntervalPriceId,  VerifyCurrencyPair},
-                {TokenKeys::LoanCollateralEnabled, VerifyBool},
-                {TokenKeys::LoanCollateralFactor,  VerifyPositiveFloat},
-                {TokenKeys::LoanMintingEnabled,    VerifyBool},
-                {TokenKeys::LoanMintingInterest,   VerifyFloat},
-                {TokenKeys::DFIP2203Enabled,       VerifyBool},
+                {TokenKeys::PaybackDFI,                VerifyBool},
+                {TokenKeys::PaybackDFIFeePCT,          VerifyPct},
+                {TokenKeys::LoanPayback,               VerifyBool},
+                {TokenKeys::LoanPaybackFeePCT,         VerifyPct},
+                {TokenKeys::LoanPaybackCollateral,     VerifyBool},
+                {TokenKeys::DexInFeePct,               VerifyPct},
+                {TokenKeys::DexOutFeePct,              VerifyPct},
+                {TokenKeys::FixedIntervalPriceId,      VerifyCurrencyPair},
+                {TokenKeys::LoanCollateralEnabled,     VerifyBool},
+                {TokenKeys::LoanCollateralFactor,      VerifyPositiveFloat},
+                {TokenKeys::LoanMintingEnabled,        VerifyBool},
+                {TokenKeys::LoanMintingInterest,       VerifyFloat},
+                {TokenKeys::DFIP2203Enabled,           VerifyBool},
             }
         },
         {
@@ -1209,21 +1209,25 @@ Res ATTRIBUTES::Apply(CCustomCSView & mnview, const uint32_t height)
                     }
                 }
             } else if (attrV0->key == TokenKeys::LoanCollateralFactor) {
-                if (height >= Params().GetConsensus().FortCanningEpilogueHeight) {
+                if (height >= static_cast<uint32_t>(Params().GetConsensus().FortCanningEpilogueHeight)) {
                     std::set<CAmount> ratio;
                     mnview.ForEachLoanScheme([&ratio](const std::string &identifier, const CLoanSchemeData &data) {
                         ratio.insert(data.ratio);
                         return true;
                     });
+                    // No loan schemes, fall back to 100% limit
                     if (ratio.empty()) {
-                        return Res::Err("Set loan scheme before setting collateral factor.");
-                    }
-                    const auto factor = std::get_if<CAmount>(&attribute.second);
-                    if (!factor) {
-                        return Res::Err("Unexpected type");
-                    }
-                    if (*factor >= *ratio.begin() * CENT) {
-                        return Res::Err("Factor cannot be more than or equal to the lowest scheme rate of %d\n", GetDecimaleString(*ratio.begin() * CENT));
+                        if (const auto amount = std::get_if<CAmount>(&attribute.second); amount && *amount > COIN) {
+                            return Res::Err("Percentage exceeds 100%%");
+                        }
+                    } else {
+                        const auto factor = std::get_if<CAmount>(&attribute.second);
+                        if (!factor) {
+                            return Res::Err("Unexpected type");
+                        }
+                        if (*factor >= *ratio.begin() * CENT) {
+                            return Res::Err("Factor cannot be more than or equal to the lowest scheme rate of %d\n", GetDecimaleString(*ratio.begin() * CENT));
+                        }
                     }
                 }
             }

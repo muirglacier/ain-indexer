@@ -116,9 +116,6 @@ class DUSDCollateralFactorTest(DefiTestFramework):
         # Move to fork
         self.nodes[0].generate(200 - self.nodes[0].getblockcount())
 
-        # Test setting before scheme set
-        assert_raises_rpc_error(-32600, "Set loan scheme before setting collateral factor", self.nodes[0].setgov, {"ATTRIBUTES":{f'v0/token/{self.idDUSD}/loan_collateral_factor': '1.50'}})
-
         # Create loan scheme
         self.nodes[0].createloanscheme(150, 1, 'LOAN001')
         self.nodes[0].generate(1)
@@ -142,21 +139,21 @@ class DUSDCollateralFactorTest(DefiTestFramework):
         self.nodes[0].generate(1)
 
         # Deposit DUSD and DFI to vault
-        self.nodes[0].deposittovault(vault_id, self.address, f"1.5@{self.symbolDFI}")
+        self.nodes[0].deposittovault(vault_id, self.address, f"2.235@{self.symbolDFI}")
         self.nodes[0].generate(1)
         self.nodes[0].deposittovault(vault_id, self.address, f"1.5@{self.symbolDUSD}")
         self.nodes[0].generate(1)
 
         # Take DUSD loan greater than collateral amount
-        self.nodes[0].takeloan({ "vaultId": vault_id, "amounts": f"2.49@{self.symbolDUSD}"})
+        self.nodes[0].takeloan({ "vaultId": vault_id, "amounts": f"2.98@{self.symbolDUSD}"})
         self.nodes[0].generate(1)
 
         # Check that we are on 150% collateral ratio
         vault = self.nodes[0].getvault(vault_id)
         assert_equal(vault['collateralRatio'], 150)
         assert_equal(vault['informativeRatio'], Decimal('150.00000000'))
-        assert_equal(vault['collateralValue'], Decimal('3.73500000'))
-        assert_equal(vault['loanValue'], Decimal('2.49000000'))
+        assert_equal(vault['collateralValue'], Decimal('4.47000000'))
+        assert_equal(vault['loanValue'], Decimal('2.98000000'))
 
     def take_multiple_loans(self):
 
