@@ -81,7 +81,7 @@ std::vector<HistoryStruct> CAccountsHistoryView::GetAccountHistoryHeight(uint32_
 
     auto it = LowerBound<ByAccountHistoryKeyNew>(AccountHistoryKeyNew{height, {}, ~0u});
     for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
-        auto value = ReadBy<ByAccountHistoryKeyNew, AccountHistoryValue>(it.Key());
+        auto value = ReadBy<ByAccountHistoryKey, AccountHistoryValue>(Convert(it.Key()));
         history.push_back(HistoryStruct{it.Key(), value.value()});
     }
 
