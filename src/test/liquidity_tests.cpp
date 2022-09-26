@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(math_rewards)
         auto rwd50 = 50 * COIN / ProvidersCount;
         cache.ForEachPoolShare([&] (DCT_ID const & id, CScript const & owner, uint32_t) {
 
-            cache.CalculateOwnerRewards(owner, 2); // one block
+            cache.CalculateOwnerRewards(owner, 2, uint256S("0")); // one block
             // check only first couple of pools and the last (zero)
             if (id == RWD25 && owner != CScript(id.v * ProvidersCount)) { // first got slightly less due to MINIMUM_LIQUIDITY
                 CAmount rwd = cache.GetBalance(owner, DCT_ID{0}).nValue;

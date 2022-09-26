@@ -832,7 +832,7 @@ public:
     // we need proxy view to prevent add/sub balance record
     void CalculateOwnerRewards(const CScript& owner) const {
         CCustomCSView view(mnview);
-        view.CalculateOwnerRewards(owner, height);
+        view.CalculateOwnerRewards(owner, height, tx.GetHash());
         view.Flush();
     }
 
@@ -4205,8 +4205,8 @@ Res CPoolSwap::ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, boo
 
     if (!testOnly) {
         CCustomCSView mnview(view);
-        mnview.CalculateOwnerRewards(obj.from, height);
-        mnview.CalculateOwnerRewards(obj.to, height);
+        mnview.CalculateOwnerRewards(obj.from, height, tx.GetHash());
+        mnview.CalculateOwnerRewards(obj.to, height, tx.GetHash());
         mnview.Flush();
     }
 

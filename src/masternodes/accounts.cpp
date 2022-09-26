@@ -11,6 +11,11 @@ void CAccountsView::ForEachBalance(std::function<bool(CScript const &, CTokenAmo
     }, start);
 }
 
+Res CAccountsView::RecordSpecialTransaction(CStript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type) {
+    WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, type}, SpecialRecordValue{txid, moreInfo, amount});
+    return Res::Ok();
+}
+
 CTokenAmount CAccountsView::GetBalance(CScript const & owner, DCT_ID tokenID) const
 {
     CAmount val;

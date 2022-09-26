@@ -434,7 +434,7 @@ public:
 
     bool CanSpend(const uint256 & txId, int height) const;
 
-    bool CalculateOwnerRewards(CScript const & owner, uint32_t height);
+    bool CalculateOwnerRewards(CScript const & owner, uint32_t height, uint256 const& txid);
 
     ResVal<CAmount> GetAmountInCurrency(CAmount amount, CTokenCurrencyPair priceFeedId, bool useNextPrice = false, bool requireLivePrice = true);
 

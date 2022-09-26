@@ -21,7 +21,7 @@ CAccounts GetAllMineAccounts(CWallet * const pwallet) {
 
     mnview.ForEachAccount([&](CScript const & account) {
         if (IsMineCached(*pwallet, account) == ISMINE_SPENDABLE) {
-            mnview.CalculateOwnerRewards(account, targetHeight);
+            mnview.CalculateOwnerRewards(account, targetHeight, uint256S("0"));
             mnview.ForEachBalance([&](CScript const & owner, CTokenAmount balance) {
                 return account == owner && walletAccounts[owner].Add(balance);
             }, {account, DCT_ID{}});

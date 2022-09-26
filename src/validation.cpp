@@ -2324,7 +2324,7 @@ void CChainState::ProcessRewardEvents(const CBlockIndex* pindex, CCustomCSView& 
     // hardfork commissions update
     const auto distributed = cache.UpdatePoolRewards(
             [&](CScript const & owner, DCT_ID tokenID) {
-                cache.CalculateOwnerRewards(owner, pindex->nHeight);
+                cache.CalculateOwnerRewards(owner, pindex->nHeight, uint256S("0"));
                 return cache.GetBalance(owner, tokenID);
             },
             [&](CScript const & from, CScript const & to, CTokenAmount amount) {
@@ -2336,7 +2336,7 @@ void CChainState::ProcessRewardEvents(const CBlockIndex* pindex, CCustomCSView& 
                     }
                 }
                 if (!to.empty()) {
-                    auto res = cache.AddBalance(to, amount);
+                    auto res = cache.(to, amount);
                     if (!res) {
                         LogPrintf("Can't apply reward to %s: %s, %ld\n", to.GetHex(), res.msg, pindex->nHeight);
                         return res;
@@ -3123,7 +3123,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
             if (!res)
                 LogPrintf("Can't subtract balance from order (%s) txidaddr: %s\n", order->creationTx.GetHex(), res.msg);
             else {
-                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
+                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight, uint256S("0"));
                 cache.AddBalance(order->ownerAddress, amount);
             }
         }
@@ -3154,7 +3154,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
             if (!res)
                 LogPrintf("Can't subtract takerFee from offer (%s) txidAddr: %s\n", offer->creationTx.GetHex(), res.msg);
             else {
-                cache.CalculateOwnerRewards(offer->ownerAddress, pindex->nHeight);
+                cache.CalculateOwnerRewards(offer->ownerAddress, pindex->nHeight, uint256S("0"));
                 cache.AddBalance(offer->ownerAddress, takerFee);
             }
         }
@@ -3185,7 +3185,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
         if (status == CICXSubmitDFCHTLC::STATUS_EXPIRED && order->orderType == CICXOrder::TYPE_INTERNAL) {
             if (!cache.ExistedICXSubmitEXTHTLC(dfchtlc->offerTx, isPreEunosPaya)) {
                 CTokenAmount makerDeposit{DCT_ID{0}, offer->takerFee};
-                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
+                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight, uint256S("0"));
                 cache.AddBalance(order->ownerAddress, makerDeposit);
                 refund = true;
             }
@@ -3205,7 +3205,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
             if (!res)
                 LogPrintf("Can't subtract balance from dfc htlc (%s) txidaddr: %s\n", dfchtlc->creationTx.GetHex(), res.msg);
             else {
-                cache.CalculateOwnerRewards(ownerAddress, pindex->nHeight);
+                cache.CalculateOwnerRewards(ownerAddress, pindex->nHeight, uint256S("0"));
                 cache.AddBalance(ownerAddress, amount);
             }
 
@@ -3234,7 +3234,7 @@ void CChainState::ProcessICXEvents(const CBlockIndex* pindex, CCustomCSView& cac
         if (status == CICXSubmitEXTHTLC::STATUS_EXPIRED && order->orderType == CICXOrder::TYPE_EXTERNAL) {
             if (!cache.ExistedICXSubmitDFCHTLC(exthtlc->offerTx, isPreEunosPaya)) {
                 CTokenAmount makerDeposit{DCT_ID{0}, offer->takerFee};
-                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight);
+                cache.CalculateOwnerRewards(order->ownerAddress, pindex->nHeight, uint256S("0"));
                 cache.AddBalance(order->ownerAddress, makerDeposit);
                 cache.ICXCloseEXTHTLC(*exthtlc, status);
             }
@@ -3431,12 +3431,14 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                         chainparams.GetConsensus().burnAddress, pindex->nHeight);
                 }
 
-                view.CalculateOwnerRewards(bidOwner, pindex->nHeight);
+                view.CalculateOwnerRewards(bidOwner, pindex->nHeight, uint256S("0"));
 
                 for (const auto& col : batch->collaterals.balances) {
                     auto tokenId = col.first;
                     auto tokenAmount = col.second;
                     view.AddBalance(bidOwner, {tokenId, tokenAmount});
+                    // all collaterals go to bidOwner if he was a successful bidder
+                    view.RecordSpecialTransaction(bidOwner, pindex->nHeight, uint256S("0"), DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionWin);
                 }
 
                 auto amountToFill = bidTokenAmount.nValue - penaltyAmount;
@@ -3638,6 +3640,7 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
                 view.AddMintedTokens(tokenDUSD->first, total);
                 CTokenAmount destination{tokenDUSD->first, total};
                 view.AddBalance(key.owner, destination);
+                view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, destination, SpecialType::FutureSwap);
                 burned.Add(futuresValues.source);
                 minted.Add(destination);
                 tokenTodUsdSwapsCounter++;
@@ -3673,6 +3676,7 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
         CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
         addView.AddBalance(key.owner, value.source);
+        view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, value.source, SpecialType::FutureSwapRefund);
         addView.Flush();
 
         LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -3769,6 +3773,7 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
             CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
             addView.AddBalance(key.owner, source);
+            view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, source, SpecialType::FutureSwapRefund);
             addView.Flush();
 
             LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -3812,6 +3817,7 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
         view.AddMintedTokens(tokenDUSD->first, total);
         CTokenAmount destination{tokenDUSD->first, total};
         view.AddBalance(key.owner, destination);
+        view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, destination, SpecialType::FutureSwap);
         burned.Add({dfiID, amount});
         minted.Add(destination);
         ++swapCounter;
@@ -4105,7 +4111,7 @@ void ConsolidateRewards(CCustomCSView &view, int height,
         boost::asio::post(workerPool, [&, &account = owner]() {
             if (interruptOnShutdown && ShutdownRequested()) return;
             auto tempView = std::make_unique<CCustomCSView>(view);
-            tempView->CalculateOwnerRewards(account, height);
+            tempView->CalculateOwnerRewards(account, height, uint256S("0"));
 
             boost::asio::post(mergeWorker, [&, tempView = std::move(tempView)]() {
                 if (interruptOnShutdown && ShutdownRequested()) return;
@@ -4251,6 +4257,7 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     if (!res.ok) {
                         throw std::runtime_error(strprintf("SubBalance failed: %s", res.msg));
                     }
+                    view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, CTokenAmount{oldPoolId, amount, SpecialType::PoolSplitOut);
                     subView.Flush();
                 }
 
@@ -4287,6 +4294,8 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                 auto refundBalances = [&, owner = owner]() {
                     addView.AddBalance(owner, {newPoolPair.idTokenA, amountA});
                     addView.AddBalance(owner, {newPoolPair.idTokenB, amountB});
+                    view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, {newPoolPair.idTokenA, amountA}, SpecialType::AuctionWin);
+                    view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, {newPoolPair.idTokenB, amountB}, SpecialType::PoolSplit);
                     addView.Flush();
                 };
 
@@ -4334,6 +4343,7 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     refundBalances();
                     continue;
                 }
+                view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, {newPoolId, liquidity}, SpecialType::AuctionWin);
                 addView.Flush();
 
                 auto oldPoolLogStr = CTokenAmount{oldPoolId, amount}.ToString();
@@ -4776,6 +4786,8 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
                 CAccountsHistoryWriter subView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &subWriters);
 
                 res = subView.SubBalance(owner, balances.second);
+                view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, balances.second, SpecialType::PoolSplitOut);
+                
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }
@@ -4785,6 +4797,8 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
                 CAccountsHistoryWriter addView(view, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::TokenSplit), &addWriters);
 
                 res = addView.AddBalance(owner, balances.first);
+                view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, balances.first, SpecialType::PoolSplit);
+
                 if (!res) {
                     throw std::runtime_error(res.msg);
                 }

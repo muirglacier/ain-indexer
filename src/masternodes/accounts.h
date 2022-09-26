@@ -41,12 +41,16 @@ struct SpecialRecordKey {
 };
 
 struct SpecialRecordValue {
-    TAmounts diff;
+    uint256 txid;
+    uint256 moreInfo;
+    CTokenAmount diff;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(txid);
+        READWRITE(moreInfo);
         READWRITE(diff);
     }
 };
@@ -93,6 +97,16 @@ struct CFuturesUserValue {
     }
 };
 
+enum SpecialType {
+    AuctionWin = 'a';
+    AuctionOwnerCollateral = 'c';
+    PoolReward = 'd';
+    FutureSwap = 'e';
+    FutureSwapRefund = 'f';
+    PoolSplit = 'g';
+    PoolSplitOut = 'h';
+};
+
 class CAccountsView : public virtual CStorageView
 {
 public:
@@ -105,6 +119,8 @@ public:
 
     Res AddBalances(CScript const & owner, CBalances const & balances);
     Res SubBalances(CScript const & owner, CBalances const & balances);
+
+    Res RecordSpecialTransaction(CStript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type);
 
     uint32_t GetBalancesHeight(CScript const & owner);
     Res UpdateBalancesHeight(CScript const & owner, uint32_t height);
