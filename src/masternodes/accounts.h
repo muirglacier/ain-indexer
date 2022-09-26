@@ -11,6 +11,46 @@
 #include <amount.h>
 #include <script/script.h>
 
+struct SpecialRecordKey {
+    uint32_t blockHeight;
+    CScript owner;
+    uint8_t type; // for order in block
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        if (ser_action.ForRead()) {
+            READWRITE(WrapBigEndian(blockHeight));
+            blockHeight = ~blockHeight;
+        } else {
+            uint32_t blockHeight_ = ~blockHeight;
+            READWRITE(WrapBigEndian(blockHeight_));
+        }
+
+        READWRITE(owner);
+
+        if (ser_action.ForRead()) {
+            READWRITE(WrapBigEndian(txn));
+            txn = ~txn;
+        } else {
+            uint8_t txn_ = ~txn;
+            READWRITE(WrapBigEndian(txn_));
+        }
+    }
+};
+
+struct SpecialRecordValue {
+    TAmounts diff;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(diff);
+    }
+};
+
 struct CFuturesUserKey {
     uint32_t height;
     CScript owner;
@@ -84,6 +124,7 @@ public:
     struct ByHeightKey  { static constexpr uint8_t prefix() { return 'b'; } };
     struct ByFuturesSwapKey  { static constexpr uint8_t prefix() { return 'J'; } };
     struct ByFuturesDUSDKey  { static constexpr uint8_t prefix() { return 'm'; } };
+    struct BySpecialRecordKey  { static constexpr uint8_t prefix() { return (uint8_t)0x05; } };
 
 private:
     Res SetBalance(CScript const & owner, CTokenAmount amount);
