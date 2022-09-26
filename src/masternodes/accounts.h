@@ -10,11 +10,26 @@
 #include <masternodes/balances.h>
 #include <amount.h>
 #include <script/script.h>
+#include <uint256.h>
+
+
+enum SpecialType {
+    AuctionWin = 'a',
+    AuctionOwnerLostCollateral = 'l',
+    AuctionOwnerCollateral = 'c',
+    AddInterest = 'q',
+    SubInterest = 'w',
+    PoolReward = 'd',
+    FutureSwap = 'e',
+    FutureSwapRefund = 'f',
+    PoolSplit = 'g',
+    PoolSplitOut = 'h'
+};
 
 struct SpecialRecordKey {
     uint32_t blockHeight;
     CScript owner;
-    uint8_t type; // for order in block
+    SpecialType type; // for order in block
 
     ADD_SERIALIZE_METHODS;
 
@@ -29,20 +44,13 @@ struct SpecialRecordKey {
         }
 
         READWRITE(owner);
-
-        if (ser_action.ForRead()) {
-            READWRITE(WrapBigEndian(txn));
-            txn = ~txn;
-        } else {
-            uint8_t txn_ = ~txn;
-            READWRITE(WrapBigEndian(txn_));
-        }
+        READWRITEAS(uint8_t, type);
     }
 };
 
 struct SpecialRecordValue {
     uint256 txid;
-    uint256 moreInfo;
+    DCT_ID moreInfo;
     CTokenAmount diff;
 
     ADD_SERIALIZE_METHODS;
@@ -97,15 +105,6 @@ struct CFuturesUserValue {
     }
 };
 
-enum SpecialType {
-    AuctionWin = 'a';
-    AuctionOwnerCollateral = 'c';
-    PoolReward = 'd';
-    FutureSwap = 'e';
-    FutureSwapRefund = 'f';
-    PoolSplit = 'g';
-    PoolSplitOut = 'h';
-};
 
 class CAccountsView : public virtual CStorageView
 {
@@ -120,7 +119,7 @@ public:
     Res AddBalances(CScript const & owner, CBalances const & balances);
     Res SubBalances(CScript const & owner, CBalances const & balances);
 
-    Res RecordSpecialTransaction(CStript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type);
+    Res RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type);
 
     uint32_t GetBalancesHeight(CScript const & owner);
     Res UpdateBalancesHeight(CScript const & owner, uint32_t height);

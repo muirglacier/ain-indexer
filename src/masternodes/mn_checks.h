@@ -398,7 +398,7 @@ ResVal<CAmount> GetAggregatePrice(CCustomCSView& view, const std::string& token,
 bool IsVaultPriceValid(CCustomCSView& mnview, const CVaultId& vaultId, uint32_t height);
 bool IsPaybackWithCollateral(CCustomCSView& mnview, const std::map<DCT_ID, CBalances>& loans);
 Res PaybackWithCollateral(CCustomCSView& view, const CVaultData& vault, const CVaultId& vaultId, uint32_t height, uint64_t time);
-Res SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CScript const & from, CScript const & to, uint32_t height, bool forceLoanSwap = false);
+Res SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CScript const & from, CScript const & to, uint32_t height, uint256 const& txid, bool forceLoanSwap = false);
 Res storeGovVars(const CGovernanceHeightMessage& obj, CCustomCSView& view);
 
 inline bool OraclePriceFeed(CCustomCSView& view, const CTokenCurrencyPair& priceFeed) {
@@ -515,7 +515,7 @@ public:
     : obj(obj), height(height) {}
 
     std::vector<DCT_ID> CalculateSwaps(CCustomCSView& view, bool testOnly = false);
-    Res ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, bool testOnly = false);
+    Res ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, bool testOnly = false, uint256 const& txid = uint256S("0"));
     std::vector<std::vector<DCT_ID>> CalculatePoolPaths(CCustomCSView& view);
     CTokenAmount GetResult() { return CTokenAmount{obj.idTokenTo, result}; };
 };

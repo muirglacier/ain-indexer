@@ -2336,7 +2336,7 @@ void CChainState::ProcessRewardEvents(const CBlockIndex* pindex, CCustomCSView& 
                     }
                 }
                 if (!to.empty()) {
-                    auto res = cache.(to, amount);
+                    auto res = cache.AddBalance(to, amount);
                     if (!res) {
                         LogPrintf("Can't apply reward to %s: %s, %ld\n", to.GetHex(), res.msg, pindex->nHeight);
                         return res;
@@ -3365,6 +3365,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                 auto tokenId = col.first;
                 auto tokenValue = col.second;
                 cache.SubVaultCollateral(vaultId, {tokenId, tokenValue});
+                view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, uint256S("0"), DCT_ID{0}, {tokenId, tokenValue}, SpecialType::AuctionOwnerLostCollateral);
             }
 
             auto batches = CollectAuctionBatches(*collateral.val, collaterals.balances, loanTokens->balances);
@@ -3428,7 +3429,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     CScript tmpAddress(vaultId.begin(), vaultId.end());
                     view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToBurn});
                     SwapToDFIorDUSD(view, bidTokenAmount.nTokenId, amountToBurn, tmpAddress,
-                        chainparams.GetConsensus().burnAddress, pindex->nHeight);
+                        chainparams.GetConsensus().burnAddress, pindex->nHeight, uint256S("0"));
                 }
 
                 view.CalculateOwnerRewards(bidOwner, pindex->nHeight, uint256S("0"));
@@ -3438,7 +3439,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     auto tokenAmount = col.second;
                     view.AddBalance(bidOwner, {tokenId, tokenAmount});
                     // all collaterals go to bidOwner if he was a successful bidder
-                    view.RecordSpecialTransaction(bidOwner, pindex->nHeight, uint256S("0"), DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionWin);
+                    view.RecordSpecialTransaction(bidOwner, pindex->nHeight, vaultId, DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionWin);
                 }
 
                 auto amountToFill = bidTokenAmount.nValue - penaltyAmount;
@@ -3447,10 +3448,12 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     CScript tmpAddress(vaultId.begin(), vaultId.end());
                     view.AddBalance(tmpAddress, {bidTokenAmount.nTokenId, amountToFill});
 
-                    SwapToDFIorDUSD(view, bidTokenAmount.nTokenId, amountToFill, tmpAddress, tmpAddress, pindex->nHeight);
+                    SwapToDFIorDUSD(view, bidTokenAmount.nTokenId, amountToFill, tmpAddress, tmpAddress, pindex->nHeight, uint256S("0"));
                     auto amount = view.GetBalance(tmpAddress, DCT_ID{0});
                     view.SubBalance(tmpAddress, amount);
                     view.AddVaultCollateral(vaultId, amount);
+                    view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, amount, SpecialType::AuctionOwnerCollateral);
+                    
                 }
 
                 auto res = view.SubMintedTokens(batch->loanAmount.nTokenId, batch->loanAmount.nValue - batch->loanInterest);
@@ -3474,6 +3477,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     auto tokenId = col.first;
                     auto tokenAmount = col.second;
                     view.AddVaultCollateral(vaultId, {tokenId, tokenAmount});
+                    view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionOwnerCollateral);
                 }
             }
         }
@@ -3676,7 +3680,7 @@ void CChainState::ProcessFutures(const CBlockIndex* pindex, CCustomCSView& cache
         CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
         CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
         addView.AddBalance(key.owner, value.source);
-        view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, value.source, SpecialType::FutureSwapRefund);
+        cache.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, value.source, SpecialType::FutureSwapRefund);
         addView.Flush();
 
         LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -3773,7 +3777,7 @@ void CChainState::ProcessFuturesDUSD(const CBlockIndex* pindex, CCustomCSView& c
             CHistoryWriters addWriters{paccountHistoryDB.get(), nullptr, nullptr};
             CAccountsHistoryWriter addView(cache, pindex->nHeight, GetNextAccPosition(), {}, uint8_t(CustomTxType::FutureSwapRefund), &addWriters);
             addView.AddBalance(key.owner, source);
-            view.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, source, SpecialType::FutureSwapRefund);
+            cache.RecordSpecialTransaction(key.owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, source, SpecialType::FutureSwapRefund);
             addView.Flush();
 
             LogPrint(BCLog::FUTURESWAP, "%s: Refund Owner %s value %s\n",
@@ -4257,7 +4261,7 @@ static Res PoolSplits(CCustomCSView& view, CAmount& totalBalance, ATTRIBUTES& at
                     if (!res.ok) {
                         throw std::runtime_error(strprintf("SubBalance failed: %s", res.msg));
                     }
-                    view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, CTokenAmount{oldPoolId, amount, SpecialType::PoolSplitOut);
+                    view.RecordSpecialTransaction(owner, pindex->nHeight, uint256S("0"), DCT_ID{0}, CTokenAmount{oldPoolId, amount}, SpecialType::PoolSplitOut);
                     subView.Flush();
                 }
 

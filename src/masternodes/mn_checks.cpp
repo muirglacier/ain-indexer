@@ -1225,7 +1225,7 @@ public:
             return Res::Err("tx must have at least one input from account owner");
         }
 
-        return CPoolSwap(obj, height).ExecuteSwap(mnview, {});
+        return CPoolSwap(obj, height).ExecuteSwap(mnview, {}, false, tx.GetHash());
     }
 
     Res operator()(const CPoolSwapMessageV2& obj) const {
@@ -1238,7 +1238,7 @@ public:
             return Res::Err(strprintf("Too many pool IDs provided, max 3 allowed, %d provided", obj.poolIDs.size()));
         }
 
-        return CPoolSwap(obj.swapInfo, height).ExecuteSwap(mnview, obj.poolIDs);
+        return CPoolSwap(obj.swapInfo, height).ExecuteSwap(mnview, obj.poolIDs, false, tx.GetHash());
     }
 
     Res operator()(const CLiquidityMessage& obj) const {
@@ -3567,7 +3567,7 @@ public:
                     if (subInterest > 0)
                     {
                         LogPrint(BCLog::LOAN, "CLoanPaybackLoanMessage(): Swapping %s interest to DFI - %lld, height - %d\n", loanToken->symbol, subInterest, height);
-                        res = SwapToDFIorDUSD(mnview, loanTokenId, subInterest, obj.from, consensus.burnAddress, height);
+                        res = SwapToDFIorDUSD(mnview, loanTokenId, subInterest, obj.from, consensus.burnAddress, height, tx.GetHash());
                     }
                 }
                 else
@@ -3629,7 +3629,7 @@ public:
                         CDataStructureV0 directBurnKey{AttributeTypes::Param, ParamIDs::DFIP2206A, DFIPKeys::DUSDLoanBurn};
                         auto directLoanBurn = attributes->GetValue(directBurnKey, false);
 
-                        res = SwapToDFIorDUSD(mnview, paybackTokenId, subInToken, obj.from, consensus.burnAddress, height, !directLoanBurn);
+                        res = SwapToDFIorDUSD(mnview, paybackTokenId, subInToken, obj.from, consensus.burnAddress, height, tx.GetHash(), !directLoanBurn);
                     }
                 }
 
@@ -4174,7 +4174,7 @@ std::vector<std::vector<DCT_ID>> CPoolSwap::CalculatePoolPaths(CCustomCSView& vi
 // Note: `testOnly` doesn't update views, and as such can result in a previous price calculations
 // for a pool, if used multiple times (or duplicated pool IDs) with the same view.
 // testOnly is only meant for one-off tests per well defined view.
-Res CPoolSwap::ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, bool testOnly) {
+Res CPoolSwap::ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, bool testOnly, uint256 const& txid) {
 
     Res poolResult = Res::Ok();
 
@@ -4205,8 +4205,8 @@ Res CPoolSwap::ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, boo
 
     if (!testOnly) {
         CCustomCSView mnview(view);
-        mnview.CalculateOwnerRewards(obj.from, height, tx.GetHash());
-        mnview.CalculateOwnerRewards(obj.to, height, tx.GetHash());
+        mnview.CalculateOwnerRewards(obj.from, height, txid);
+        mnview.CalculateOwnerRewards(obj.to, height, txid);
         mnview.Flush();
     }
 
@@ -4368,7 +4368,7 @@ Res CPoolSwap::ExecuteSwap(CCustomCSView& view, std::vector<DCT_ID> poolIDs, boo
     return poolResult;
 }
 
-Res  SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CScript const & from, CScript const & to, uint32_t height, bool forceLoanSwap)
+Res  SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CScript const & from, CScript const & to, uint32_t height, uint256 const& txid, bool forceLoanSwap)
 {
     CPoolSwapMessage obj;
 
@@ -4410,7 +4410,7 @@ Res  SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CSc
         }
         else
             // swap dUSD -> DFI and burn DFI
-            return poolSwap.ExecuteSwap(mnview, {});
+            return poolSwap.ExecuteSwap(mnview, {}, false, txid);
     }
 
     auto pooldUSDDFI = mnview.GetPoolPair(dUsdToken->first, DCT_ID{0});
@@ -4426,11 +4426,11 @@ Res  SwapToDFIorDUSD(CCustomCSView & mnview, DCT_ID tokenId, CAmount amount, CSc
         obj.idTokenTo = dUsdToken->first;
 
         // swap tokenID -> dUSD and burn dUSD
-        return poolSwap.ExecuteSwap(mnview, {});
+        return poolSwap.ExecuteSwap(mnview, {}, false, txid);
     }
     else
         // swap tokenID -> dUSD -> DFI and burn DFI
-        return poolSwap.ExecuteSwap(mnview, {poolTokendUSD->first, pooldUSDDFI->first});
+        return poolSwap.ExecuteSwap(mnview, {poolTokendUSD->first, pooldUSDDFI->first}, false, txid);
 }
 
 bool IsVaultPriceValid(CCustomCSView& mnview, const CVaultId& vaultId, uint32_t height)
