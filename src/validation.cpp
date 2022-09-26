@@ -3365,7 +3365,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                 auto tokenId = col.first;
                 auto tokenValue = col.second;
                 cache.SubVaultCollateral(vaultId, {tokenId, tokenValue});
-                view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, uint256S("0"), DCT_ID{0}, {tokenId, tokenValue}, SpecialType::AuctionOwnerLostCollateral);
+                cache.RecordSpecialTransaction(vault.value().ownerAddress, pindex->nHeight, uint256S("0"), DCT_ID{0}, {tokenId, tokenValue}, SpecialType::AuctionOwnerLostCollateral);
             }
 
             auto batches = CollectAuctionBatches(*collateral.val, collaterals.balances, loanTokens->balances);
@@ -3452,7 +3452,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     auto amount = view.GetBalance(tmpAddress, DCT_ID{0});
                     view.SubBalance(tmpAddress, amount);
                     view.AddVaultCollateral(vaultId, amount);
-                    view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, amount, SpecialType::AuctionOwnerCollateral);
+                    view.RecordSpecialTransaction(vault.value().ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, amount, SpecialType::AuctionOwnerCollateral);
                     
                 }
 
@@ -3477,7 +3477,7 @@ void CChainState::ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& ca
                     auto tokenId = col.first;
                     auto tokenAmount = col.second;
                     view.AddVaultCollateral(vaultId, {tokenId, tokenAmount});
-                    view.RecordSpecialTransaction(vault.ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionOwnerCollateral);
+                    view.RecordSpecialTransaction(vault.value().ownerAddress, pindex->nHeight, vaultId, DCT_ID{0}, {tokenId, tokenAmount}, SpecialType::AuctionOwnerCollateral);
                 }
             }
         }
