@@ -12,6 +12,11 @@ void CAccountsView::ForEachBalance(std::function<bool(CScript const &, CTokenAmo
 }
 
 Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type) {
+
+    // keep data down
+    if(type == SpecialType::AddInterest || type == SpecialType::PoolReward)
+        return;
+
     WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, type}, SpecialRecordValue{txid, moreInfo, amount});
     return Res::Ok();
 }
