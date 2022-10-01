@@ -15,7 +15,7 @@ Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t heig
 
     // keep data down
     if(type == SpecialType::AddInterest || type == SpecialType::PoolReward)
-        return;
+        return Res::Ok();
 
     WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, type}, SpecialRecordValue{txid, moreInfo, amount});
     return Res::Ok();
