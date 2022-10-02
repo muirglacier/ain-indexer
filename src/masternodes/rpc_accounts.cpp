@@ -2630,7 +2630,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
     CCustomCSView view(*pcustomcsview);
     UniValue valarr{UniValue::VARR};
 
-    const std::vector<VaultStruct> undo = view.ForEachSpecial([&valarr](const SpecialRecordKey & key, const SpecialRecordValue & value) {
+    view.ForEachSpecial([&valarr](const SpecialRecordKey & key, const SpecialRecordValue & value) {
         UniValue _value{UniValue::VOBJ};
 
         CTxDestination dest;
@@ -2640,7 +2640,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         _value.pushKV("owner", dest);
         _value.pushKV("type", key.type);
         _value.pushKV("difference", value.diff);
-        _value.pushKV("moreinfo", value.moreInfo.v);
+        _value.pushKV("moreinfo", (int)value.moreInfo.v);
         _value.pushKV("txid", value.txid.GetHex());
         valarr.push_back(_value);
 
