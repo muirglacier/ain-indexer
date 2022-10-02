@@ -110,6 +110,7 @@ class CAccountsView : public virtual CStorageView
 {
 public:
     void ForEachAccount(std::function<bool(CScript const &)> callback, CScript const & start = {});
+    void ForEachSpecial(std::function<bool(SpecialRecordKey const &, SpecialRecordValue const &)> callback, uint32_t height);
     void ForEachBalance(std::function<bool(CScript const &, CTokenAmount const &)> callback, BalanceKey const & start = {});
     CTokenAmount GetBalance(CScript const & owner, DCT_ID tokenID) const;
 

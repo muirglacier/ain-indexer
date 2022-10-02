@@ -11,6 +11,15 @@ void CAccountsView::ForEachBalance(std::function<bool(CScript const &, CTokenAmo
     }, start);
 }
 
+void CAccountsView::ForEachSpecial(std::function<bool(SpecialRecordKey const &, SpecialRecordValue const &)> callback, uint32_t height)
+{
+    auto it = LowerBound<BySpecialRecordKey>(SpecialRecordKey{height, {}, SpecialType::AddInterest});
+    for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
+        auto value = ReadBy<BySpecialRecordKey, SpecialRecordValue>(it.Key());
+        callback(it.Key(), value.value());
+    }
+}
+
 Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type) {
 
     // keep data down

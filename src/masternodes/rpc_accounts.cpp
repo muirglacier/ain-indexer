@@ -2608,6 +2608,47 @@ UniValue getvaultsforblock(const JSONRPCRequest& request) {
 
 }
 
+
+UniValue getspecialsforblock(const JSONRPCRequest& request) {
+    RPCHelpMan{"getspecialsforblock",
+               "Get specific specials history information for a block height.\n",
+               {
+                       {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height"},
+               },
+               RPCResult{
+                       "{\n"
+                       "... to be added\n"
+                       "}\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("getvaultsforblock","")
+               },
+    }.Check(request);
+
+    uint32_t height = atoi(request.params[0].get_str().c_str());
+    LOCK(cs_main);
+    CCustomCSView view(*pcustomcsview);
+    UniValue valarr{UniValue::VARR};
+
+    const std::vector<VaultStruct> undo = view.ForEachSpecial([&valarr](const SpecialRecordKey & key, const SpecialRecordValue & value) {
+        UniValue value{UniValue::VOBJ};
+
+        CTxDestination dest;
+        ExtractDestination(key.owner, dest);
+        std::string owner = EncodeDestination(dest);
+        value.pushKV("blockHeight", (int)key.blockHeight);
+        value.pushKV("owner", dest);
+        value.pushKV("type", key.type);
+        value.pushKV("difference", value.diff);
+        value.pushKV("moreinfo", value.moreInfo.v);
+        value.pushKV("txid", value.txid.GetHex());
+        valarr.push_back(value);
+    });
+
+    return valarr;
+
+}
+
 UniValue getundo(const JSONRPCRequest& request) {
     RPCHelpMan{"getundo",
                "Get specific undo information for a transaction.\n",
@@ -2809,6 +2850,7 @@ static const CRPCCommand commands[] =
     {"accounts",   "getundo",                  &getundo,                   {"txid", "blockHeight"}},
     {"accounts",   "getaccountsforblock",      &getaccountsforblock,       {"blockHeight"}},
     {"accounts",   "getvaultsforblock",        &getvaultsforblock,         {"blockHeight"}},
+    {"accounts",   "getspecialsforblock",      &getspecialsforblock,         {"blockHeight"}},
     {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
 };
 
