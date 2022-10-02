@@ -2643,6 +2643,8 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         _value.pushKV("moreinfo", value.moreInfo.v);
         _value.pushKV("txid", value.txid.GetHex());
         valarr.push_back(_value);
+
+        return true;
     }, height);
 
     return valarr;
