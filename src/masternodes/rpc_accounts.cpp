@@ -2621,7 +2621,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
                        "}\n"
                },
                RPCExamples{
-                       HelpExampleCli("getvaultsforblock","")
+                       jHelpExampleCli("getvaultsforblock","")
                },
     }.Check(request);
 
@@ -2639,7 +2639,8 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         _value.pushKV("blockHeight", (int)key.blockHeight);
         _value.pushKV("owner", owner);
         _value.pushKV("type", key.type);
-        _value.pushKV("difference", ValueFromAmount(value.diff));
+        _value.pushKV("value", ValueFromAmount(value.diff.nValue));
+        _value.pushKV("token", (int)value.diff.nTokenId);
         _value.pushKV("moreinfo", (int)value.moreInfo.v);
         _value.pushKV("txid", value.txid.GetHex());
         valarr.push_back(_value);
