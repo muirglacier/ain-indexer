@@ -2637,7 +2637,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         ExtractDestination(key.owner, dest);
         std::string owner = EncodeDestination(dest);
         _value.pushKV("blockHeight", (int)key.blockHeight);
-        _value.pushKV("owner", dest);
+        _value.pushKV("owner", owner);
         _value.pushKV("type", key.type);
         _value.pushKV("difference", value.diff);
         _value.pushKV("moreinfo", (int)value.moreInfo.v);
