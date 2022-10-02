@@ -2621,7 +2621,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
                        "}\n"
                },
                RPCExamples{
-                       jHelpExampleCli("getvaultsforblock","")
+                       HelpExampleCli("getvaultsforblock","")
                },
     }.Check(request);
 
