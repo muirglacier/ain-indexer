@@ -2631,19 +2631,19 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
     UniValue valarr{UniValue::VARR};
 
     const std::vector<VaultStruct> undo = view.ForEachSpecial([&valarr](const SpecialRecordKey & key, const SpecialRecordValue & value) {
-        UniValue value{UniValue::VOBJ};
+        UniValue _value{UniValue::VOBJ};
 
         CTxDestination dest;
         ExtractDestination(key.owner, dest);
         std::string owner = EncodeDestination(dest);
-        value.pushKV("blockHeight", (int)key.blockHeight);
-        value.pushKV("owner", dest);
-        value.pushKV("type", key.type);
-        value.pushKV("difference", value.diff);
-        value.pushKV("moreinfo", value.moreInfo.v);
-        value.pushKV("txid", value.txid.GetHex());
-        valarr.push_back(value);
-    });
+        _value.pushKV("blockHeight", (int)key.blockHeight);
+        _value.pushKV("owner", dest);
+        _value.pushKV("type", key.type);
+        _value.pushKV("difference", value.diff);
+        _value.pushKV("moreinfo", value.moreInfo.v);
+        _value.pushKV("txid", value.txid.GetHex());
+        valarr.push_back(_value);
+    }, height);
 
     return valarr;
 
