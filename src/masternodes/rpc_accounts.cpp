@@ -2639,7 +2639,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         _value.pushKV("blockHeight", (int)key.blockHeight);
         _value.pushKV("owner", owner);
         _value.pushKV("type", key.type);
-        _value.pushKV("difference", value.diff);
+        _value.pushKV("difference", ValueFromAmount(value.diff));
         _value.pushKV("moreinfo", (int)value.moreInfo.v);
         _value.pushKV("txid", value.txid.GetHex());
         valarr.push_back(_value);
