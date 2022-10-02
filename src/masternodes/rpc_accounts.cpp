@@ -2640,7 +2640,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request) {
         _value.pushKV("owner", owner);
         _value.pushKV("type", key.type);
         _value.pushKV("value", ValueFromAmount(value.diff.nValue));
-        _value.pushKV("token", (int)value.diff.nTokenId);
+        _value.pushKV("token", (int)value.diff.nTokenId.v);
         _value.pushKV("moreinfo", (int)value.moreInfo.v);
         _value.pushKV("txid", value.txid.GetHex());
         valarr.push_back(_value);
