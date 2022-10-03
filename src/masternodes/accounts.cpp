@@ -13,7 +13,7 @@ void CAccountsView::ForEachBalance(std::function<bool(CScript const &, CTokenAmo
 
 void CAccountsView::ForEachSpecial(std::function<bool(SpecialRecordKey const &, SpecialRecordValue const &)> callback, uint32_t height)
 {
-    auto it = LowerBound<BySpecialRecordKey>(SpecialRecordKey{height, {}, (uint8_t)0)});
+    auto it = LowerBound<BySpecialRecordKey>(SpecialRecordKey{height, {}, (uint8_t)0});
     for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
         auto value = ReadBy<BySpecialRecordKey, SpecialRecordValue>(it.Key());
         callback(it.Key(), value.value());
