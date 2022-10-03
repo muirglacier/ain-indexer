@@ -29,7 +29,7 @@ enum SpecialType {
 struct SpecialRecordKey {
     uint32_t blockHeight;
     CScript owner;
-    SpecialType type; // for order in block
+    uint8_t type; // for order in block
 
     ADD_SERIALIZE_METHODS;
 
@@ -44,7 +44,7 @@ struct SpecialRecordKey {
         }
 
         READWRITE(owner);
-        READWRITEAS(uint8_t, type);
+        READWRITE(type);
     }
 };
 
