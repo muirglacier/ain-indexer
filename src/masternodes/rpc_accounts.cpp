@@ -2722,7 +2722,7 @@ UniValue getspecialsforblock(const JSONRPCRequest& request)
     CCustomCSView view(*pcustomcsview);
     UniValue valarr{UniValue::VARR};
 
-    view.ForEachSpecial([&valarr](const SpecialRecordKey& key, const SpecialRecordValue& value) {
+    view.ForEachSpecial([&valarr, &view](const SpecialRecordKey& key, const SpecialRecordValue& value) {
         UniValue _value{UniValue::VOBJ};
 
         CTxDestination dest;
