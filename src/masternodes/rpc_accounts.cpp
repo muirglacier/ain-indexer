@@ -1255,6 +1255,187 @@ UniValue listaccounthistory(const JSONRPCRequest& request) {
     return GetRPCResultCache().Set(request, slice);
 }
 
+
+
+
+UniValue listaccountrewards(const JSONRPCRequest& request) {
+    auto pwallet = GetWallet(request);
+
+    RPCHelpMan{"listaccountrewards",
+               "\nReturns information about account history rewards.\n",
+               {
+                        {"owner", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
+                                    "Single account ID (CScript or address) or reserved words: \"mine\" - to list history for all owned accounts or \"all\" to list whole DB (default = \"mine\")."},
+                        {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                            {
+                                 {"maxBlockHeight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                  "Optional height to iterate from (downto genesis block), (default = chaintip)."},
+                                 {"depth", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                  "Maximum depth, from the genesis block is the default"},
+                                 {"limit", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                  "Maximum number of records to return, 100 by default"},
+                                 {"txn", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+                                  "Order in block, unlimited by default"},
+                                 {"format", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
+                                  "Return amounts with the following: 'id' -> <amount>@id; (default)'symbol' -> <amount>@symbol"},
+
+                            },
+                        },
+               },
+               RPCResult{
+                       "[{},{}...]     (array) Objects with account history information\n"
+               },
+               RPCExamples{
+                       HelpExampleCli("listaccountrewards", "all '{\"maxBlockHeight\":160,\"depth\":10}'")
+                       + HelpExampleRpc("listaccountrewards", "address false")
+               },
+    }.Check(request);
+
+    std::string accounts = "all";
+    if (request.params.size() > 0) {
+        accounts = request.params[0].getValStr();
+    }
+
+    if (!paccountHistoryDB) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "-acindex is needed for account history");
+    }
+
+    if (auto res = GetRPCResultCache().TryGet(request)) return *res;
+
+    uint32_t maxBlockHeight = std::numeric_limits<uint32_t>::max();
+    uint32_t depth = maxBlockHeight;
+    uint32_t limit = 100;
+    uint32_t txn = std::numeric_limits<uint32_t>::max();
+    AmountFormat format = AmountFormat::Symbol;
+
+    if (request.params.size() > 1) {
+        UniValue optionsObj = request.params[1].get_obj();
+        RPCTypeCheckObj(optionsObj,
+            {
+                {"maxBlockHeight", UniValueType(UniValue::VNUM)},
+                {"depth", UniValueType(UniValue::VNUM)},
+                {"limit", UniValueType(UniValue::VNUM)},
+                {"txn", UniValueType(UniValue::VNUM)},
+                {"format", UniValueType(UniValue::VSTR)}
+            }, true, true);
+
+        if (!optionsObj["maxBlockHeight"].isNull()) {
+            maxBlockHeight = (uint32_t) optionsObj["maxBlockHeight"].get_int64();
+        }
+        if (!optionsObj["depth"].isNull()) {
+            depth = (uint32_t) optionsObj["depth"].get_int64();
+        }
+
+     
+        if (!optionsObj["limit"].isNull()) {
+            limit = (uint32_t) optionsObj["limit"].get_int64();
+        }
+        if (limit == 0) {
+            limit = std::numeric_limits<decltype(limit)>::max();
+        }
+
+        if (!optionsObj["txn"].isNull()) {
+            txn = (uint32_t) optionsObj["txn"].get_int64();
+        }
+
+        if (!optionsObj["format"].isNull()) {
+            const auto formatStr = optionsObj["format"].getValStr();
+            if (formatStr == "symbol"){
+                format = AmountFormat::Symbol;
+            }
+            else if (formatStr == "id") {
+                format = AmountFormat::Id;
+            }
+            else {
+                throw JSONRPCError(RPC_INVALID_REQUEST, "format must be one of the following: \"id\", \"symbol\"");
+            }
+        }
+    }
+
+    std::function<bool(CScript const &)> isMatchOwner = [](CScript const &) {
+        return true;
+    };
+
+    CScript account;
+    if (accounts != "all") {
+        account = DecodeScript(accounts);
+        isMatchOwner = [&account](CScript const & owner) {
+            return owner == account;
+        };
+    }
+
+    LOCK(cs_main);
+    CCustomCSView view(*pcustomcsview);
+    CCoinsViewCache coins(&::ChainstateActive().CoinsTip());
+    std::map<uint32_t, UniValue, std::greater<uint32_t>> ret;
+
+    maxBlockHeight = std::min(maxBlockHeight, uint32_t(::ChainActive().Height()));
+    depth = std::min(depth, maxBlockHeight);
+
+    const auto startBlock = maxBlockHeight - depth;
+    auto shouldSkipBlock = [startBlock, maxBlockHeight](uint32_t blockHeight) {
+        return startBlock > blockHeight || blockHeight > maxBlockHeight;
+    };
+
+    CScript lastOwner;
+    auto count = limit;
+    auto lastHeight = maxBlockHeight;
+
+    auto shouldContinueToNextAccountHistory = [&](AccountHistoryKey const & key, AccountHistoryValue value) -> bool {
+        if (!isMatchOwner(key.owner)) {
+            return false;
+        }
+
+        std::unique_ptr<CScopeAccountReverter> reverter;
+        reverter = std::make_unique<CScopeAccountReverter>(view, key.owner, value.diff);
+        
+
+        bool accountRecord = true;
+        auto workingHeight = key.blockHeight;
+
+        if (shouldSkipBlock(key.blockHeight)) {
+            // show rewards in interval [startBlock, lastHeight)
+            if (startBlock > workingHeight) {
+                accountRecord = false;
+                workingHeight = startBlock;
+            } else {
+                return true;
+            }
+        }
+
+
+        if (lastHeight > workingHeight) {
+            onPoolRewards(view, key.owner, workingHeight, lastHeight,
+                [&](int32_t height, DCT_ID poolId, RewardType type, CTokenAmount amount) {
+                        auto& array = ret.emplace(height, UniValue::VARR).first->second;
+                        array.push_back(rewardhistoryToJSON(key.owner, height, poolId, type, amount, format));
+                        count ? --count : 0;
+                }
+            );
+        }
+
+        lastHeight = workingHeight;
+        return count != 0;
+    };
+
+
+    paccountHistoryDB->ForEachAccountHistory(shouldContinueToNextAccountHistory, account, maxBlockHeight, txn);
+
+    UniValue slice(UniValue::VARR);
+    for (auto it = ret.cbegin(); limit != 0 && it != ret.cend(); ++it) {
+        const auto& array = it->second.get_array();
+        for (size_t i = 0; limit != 0 && i < array.size(); ++i) {
+            slice.push_back(array[i]);
+            --limit;
+        }
+    }
+
+    return GetRPCResultCache().Set(request, slice);
+}
+
+
+
+
 UniValue getaccounthistory(const JSONRPCRequest& request) {
 
     RPCHelpMan{"getaccounthistory",
@@ -2837,6 +3018,7 @@ static const CRPCCommand commands[] =
     {"accounts",   "accounttoaccount",         &accounttoaccount,          {"from", "to", "inputs"}},
     {"accounts",   "accounttoutxos",           &accounttoutxos,            {"from", "to", "inputs"}},
     {"accounts",   "listaccounthistory",       &listaccounthistory,        {"owner", "options"}},
+    {"accounts",   "listaccountrewards",       &listaccountrewards,        {"owner", "options"}},
     {"accounts",   "getaccounthistory",        &getaccounthistory,         {"owner", "blockHeight", "txn"}},
     {"accounts",   "listburnhistory",          &listburnhistory,           {"options"}},
     {"accounts",   "accounthistorycount",      &accounthistorycount,       {"owner", "options"}},
