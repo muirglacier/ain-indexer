@@ -1204,7 +1204,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
         auto workingHeight = key.blockHeight;
         bool shouldSkip = shouldSkipBlock(key.blockHeight);
 
-        std::cout << "start: " << startBlock << ", working: " << workingHeight << ", lastHeight: " << lastHeight << ", max: " << maxBlockHeight << ", skip: " << shouldSkip << std::endl;
+        // std::cout << "start: " << startBlock << ", working: " << workingHeight << ", lastHeight: " << lastHeight << ", max: " << maxBlockHeight << ", skip: " << shouldSkip << std::endl;
 
         if (shouldSkip) {
             // show rewards in interval [startBlock, lastHeight)
