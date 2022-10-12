@@ -1202,7 +1202,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
         bool accountRecord = true;
         auto workingHeight = key.blockHeight;
-        bool shouldSkip = shouldSkipBlock(key.blockHeight)
+        bool shouldSkip = shouldSkipBlock(key.blockHeight);
 
         std::cout << "start: " << startBlock << ", working: " << workingHeight << ", lastHeight: " << lastHeight << ", max: " << maxBlockHeight << ", skip: " << shouldSkip << std::endl;
 
