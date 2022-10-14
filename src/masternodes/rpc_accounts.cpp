@@ -1076,6 +1076,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     uint32_t maxBlockHeight = std::numeric_limits<uint32_t>::max();
     uint32_t depth = maxBlockHeight;
     bool noRewards = false;
+    bool onlyRewards = false;
     std::string tokenFilter;
     uint32_t limit = 100;
     auto txType = CustomTxType::None;
@@ -1088,6 +1089,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             {{"maxBlockHeight", UniValueType(UniValue::VNUM)},
                 {"depth", UniValueType(UniValue::VNUM)},
                 {"no_rewards", UniValueType(UniValue::VBOOL)},
+                {"only_rewards", UniValueType(UniValue::VBOOL)},
                 {"token", UniValueType(UniValue::VSTR)},
                 {"txtype", UniValueType(UniValue::VSTR)},
                 {"limit", UniValueType(UniValue::VNUM)},
@@ -1104,6 +1106,10 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
         if (!optionsObj["no_rewards"].isNull()) {
             noRewards = optionsObj["no_rewards"].get_bool();
+        }
+
+        if (!optionsObj["only_rewards"].isNull()) {
+            noRewards = optionsObj["only_rewards"].get_bool();
         }
 
         if (!optionsObj["token"].isNull()) {
@@ -1240,7 +1246,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             lastHeight = maxBlockHeight;
         }
 
-        if (accountRecord && (tokenFilter.empty() || hasToken(value.diff))) {
+        if (!only_rewards && accountRecord && (tokenFilter.empty() || hasToken(value.diff))) {
             auto& array = ret.emplace(workingHeight, UniValue::VARR).first->second;
             array.push_back(accounthistoryToJSON(key, value, format));
             if (shouldSearchInWallet) {
