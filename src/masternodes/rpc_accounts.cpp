@@ -1111,7 +1111,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
         }
 
         if (!optionsObj["only_rewards"].isNull()) {
-            noRewards = optionsObj["only_rewards"].get_bool();
+            onlyRewards = optionsObj["only_rewards"].get_bool();
         }
 
         if (!optionsObj["token"].isNull()) {
