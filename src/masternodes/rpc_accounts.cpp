@@ -1041,6 +1041,8 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
                         "Maximum depth, from the genesis block is the default"},
                     {"no_rewards", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED,
                         "Filter out rewards"},
+                    {"only_rewards", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED,
+                        "Only show rewards"},
                     {"token", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
                         "Filter by token"},
                     {"txtype", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
