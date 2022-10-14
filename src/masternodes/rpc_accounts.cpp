@@ -1246,7 +1246,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             lastHeight = maxBlockHeight;
         }
 
-        if (!only_rewards && accountRecord && (tokenFilter.empty() || hasToken(value.diff))) {
+        if (!onlyRewards && accountRecord && (tokenFilter.empty() || hasToken(value.diff))) {
             auto& array = ret.emplace(workingHeight, UniValue::VARR).first->second;
             array.push_back(accounthistoryToJSON(key, value, format));
             if (shouldSearchInWallet) {
