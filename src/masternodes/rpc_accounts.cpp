@@ -1400,7 +1400,7 @@ UniValue listburnhistory(const JSONRPCRequest& request)
                     {"depth", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
                         "Maximum depth, from the genesis block is the default"},
                     {"token", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
-                        "Filter by token"},blockFinishingPhaseDone = true;
+                        "Filter by token"},
                     {"txtype", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
                         "Filter by transaction type, supported letter from {CustomTxType}"},
                     {"limit", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
