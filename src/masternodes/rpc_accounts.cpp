@@ -1259,7 +1259,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             count ? --count : 0;
         }
 
-        if (!noRewards && count && lastHeight > workingHeight) {
+        if (!noRewards && (count || blockFinishingMarker) && lastHeight > workingHeight) {
             onPoolRewards(view, key.owner, workingHeight, lastHeight,
                 [&](int32_t height, DCT_ID poolId, RewardType type, CTokenAmount amount) {
                     if(blockFinishingPhase && height != blockFinishingMarker)
