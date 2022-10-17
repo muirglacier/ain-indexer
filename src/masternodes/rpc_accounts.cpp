@@ -1079,6 +1079,8 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     uint32_t depth = maxBlockHeight;
     bool noRewards = false;
     bool onlyRewards = false;
+    bool blockFinishingPhase = false;
+    uint32_t blockFinishingMarker = 0;
     std::string tokenFilter;
     uint32_t limit = 100;
     auto txType = CustomTxType::None;
@@ -1254,23 +1256,34 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             if (shouldSearchInWallet) {
                 txs.insert(value.txid);
             }
-            --count;
+            count ? --count : 0;
         }
 
         if (!noRewards && count && lastHeight > workingHeight) {
             onPoolRewards(view, key.owner, workingHeight, lastHeight,
                 [&](int32_t height, DCT_ID poolId, RewardType type, CTokenAmount amount) {
+                    if(blockFinishingPhase && height != blockFinishingMarker)
+                    {
+                        blockFinishingPhase = false;
+                        return;
+                    }
                     if (tokenFilter.empty() || hasToken({{amount.nTokenId, amount.nValue}})) {
                         auto& array = ret.emplace(height, UniValue::VARR).first->second;
                         array.push_back(rewardhistoryToJSON(key.owner, height, poolId, type, amount, format));
+                        if(!blockFinishingPhase)
+                            blockFinishingMarker = height;
                         count ? --count : 0;
                     }
                 });
         }
 
+        if(count == 0 && blockFinishingPhase == false) {
+            blockFinishingPhase = true;
+        }
+
         lastHeight = workingHeight;
 
-        return accountRecord && (count != 0 || isMine);
+        return accountRecord && (count != 0 || isMine || blockFinishingPhase);
     };
 
     if (!noRewards && !account.empty()) {
