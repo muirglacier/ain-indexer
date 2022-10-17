@@ -1080,6 +1080,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     bool noRewards = false;
     bool onlyRewards = false;
     bool blockFinishingPhase = false;
+    bool blockFinishingPhaseDone = false;
     uint32_t blockFinishingMarker = 0;
     std::string tokenFilter;
     uint32_t limit = 100;
@@ -1259,12 +1260,13 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             count ? --count : 0;
         }
 
-        if (!noRewards && (count || blockFinishingMarker) && lastHeight > workingHeight) {
+        if (!noRewards && (count || blockFinishingPhase) && lastHeight > workingHeight) {
             onPoolRewards(view, key.owner, workingHeight, lastHeight,
                 [&](int32_t height, DCT_ID poolId, RewardType type, CTokenAmount amount) {
-                    if(blockFinishingPhase && height != blockFinishingMarker)
+                    if((blockFinishingPhase && height != blockFinishingMarker) || blockFinishingPhaseDone)
                     {
                         blockFinishingPhase = false;
+                        blockFinishingPhaseDone = true;
                         return;
                     }
                     if (tokenFilter.empty() || hasToken({{amount.nTokenId, amount.nValue}})) {
@@ -1283,7 +1285,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
         lastHeight = workingHeight;
 
-        return accountRecord && (count != 0 || isMine || blockFinishingPhase);
+        return accountRecord && (!blockFinishingPhaseDone) && (count != 0 || isMine || blockFinishingPhase);
     };
 
     if (!noRewards && !account.empty()) {
@@ -1398,7 +1400,7 @@ UniValue listburnhistory(const JSONRPCRequest& request)
                     {"depth", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
                         "Maximum depth, from the genesis block is the default"},
                     {"token", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
-                        "Filter by token"},
+                        "Filter by token"},blockFinishingPhaseDone = true;
                     {"txtype", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
                         "Filter by transaction type, supported letter from {CustomTxType}"},
                     {"limit", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
