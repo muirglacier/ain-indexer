@@ -135,7 +135,6 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     std::string strUserPass64 = strAuth.substr(6);
     boost::trim(strUserPass64);
     std::string strUserPass = DecodeBase64(strUserPass64);
-
     if (strUserPass.find(':') != std::string::npos)
         strAuthUsernameOut = strUserPass.substr(0, strUserPass.find(':'));
 
@@ -192,7 +191,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
     JSONRPCRequest jreq;
     jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+        LogPrintf("ThreadRPCServer incorrect password attempt from %s (authuser %s)\n", jreq.peerAddr, jreq.authUser);
 
         /* Deter brute-forcing
            If this results in a DoS the user really

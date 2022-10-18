@@ -6,6 +6,8 @@
 #include <masternodes/mn_rpc.h>
 #include <masternodes/undos.h>
 
+#include <ostream>
+
 std::string tokenAmountString(CTokenAmount const& amount, AmountFormat format = AmountFormat::Symbol)
 {
     const auto token = pcustomcsview->GetToken(amount.nTokenId);
@@ -101,6 +103,15 @@ UniValue rewardhistoryToJSON(CScript const& owner, uint32_t height, DCT_ID const
     obj.pushKV("poolID", poolId.ToString());
     TAmounts amounts({{amount.nTokenId, amount.nValue}});
     obj.pushKV("amounts", AmountsToJSON(amounts, format));
+    return obj;
+}
+
+UniValue binnedhistoryToJSON(uint32_t time, CTokenAmount amount)
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("time", (uint64_t)time);
+    TAmounts amounts({{amount.nTokenId, amount.nValue}});
+    obj.pushKV("amounts", AmountsToJSON(amounts));
     return obj;
 }
 
@@ -1019,6 +1030,31 @@ public:
     }
 };
 
+struct BinningKey;
+struct BinningKey {
+    uint32_t first;
+    DCT_ID second;
+
+    bool operator<(const BinningKey& rhs) const
+    {
+        if (first == rhs.first) {
+            return second.v < rhs.second.v;
+        }
+        return first < rhs.first;
+    }
+
+    bool operator==(const BinningKey& a) const
+    {
+        return (first == a.first && second.v == a.second.v);
+    }
+};
+
+std::ostream& operator<<(std::ostream& os, const BinningKey& s)
+{
+    return (os << "(time: " << s.first << ", token: " << s.second.v << ")");
+}
+
+
 UniValue listaccounthistory(const JSONRPCRequest& request)
 {
     auto pwallet = GetWallet(request);
@@ -1044,6 +1080,8 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
                     {"only_rewards", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED,
                         "Only show rewards"},
                     {"token", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
+                        "Filter by token"},
+                    {"binning", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
                         "Filter by token"},
                     {"txtype", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
                         "Filter by transaction type, supported letter from {CustomTxType}"},
@@ -1079,10 +1117,8 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     uint32_t depth = maxBlockHeight;
     bool noRewards = false;
     bool onlyRewards = false;
-    bool blockFinishingPhase = false;
-    bool blockFinishingPhaseDone = false;
-    uint32_t blockFinishingMarker = 0;
     std::string tokenFilter;
+    std::string binning;
     uint32_t limit = 100;
     auto txType = CustomTxType::None;
     uint32_t txn = std::numeric_limits<uint32_t>::max();
@@ -1096,6 +1132,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
                 {"no_rewards", UniValueType(UniValue::VBOOL)},
                 {"only_rewards", UniValueType(UniValue::VBOOL)},
                 {"token", UniValueType(UniValue::VSTR)},
+                {"binning", UniValueType(UniValue::VSTR)},
                 {"txtype", UniValueType(UniValue::VSTR)},
                 {"limit", UniValueType(UniValue::VNUM)},
                 {"txn", UniValueType(UniValue::VNUM)},
@@ -1119,6 +1156,10 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
         if (!optionsObj["token"].isNull()) {
             tokenFilter = optionsObj["token"].get_str();
+        }
+
+        if (!optionsObj["binning"].isNull()) {
+            binning = optionsObj["binning"].get_str();
         }
 
         if (!optionsObj["txtype"].isNull()) {
@@ -1187,7 +1228,11 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     LOCK(cs_main);
     CCustomCSView view(*pcustomcsview);
     CCoinsViewCache coins(&::ChainstateActive().CoinsTip());
+
+
     std::map<uint32_t, UniValue, std::greater<uint32_t>> ret;
+    std::set<uint32_t> uniqueBinTimes;
+    std::map<BinningKey, CTokenAmount> binningRet;
 
     maxBlockHeight = std::min(maxBlockHeight, uint32_t(::ChainActive().Height()));
     depth = std::min(depth, maxBlockHeight);
@@ -1200,6 +1245,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     CScript lastOwner;
     auto count = limit;
     auto lastHeight = maxBlockHeight;
+
 
     auto shouldContinueToNextAccountHistory = [&](AccountHistoryKey const& key, AccountHistoryValue value) -> bool {
         if (!isMatchOwner(key.owner)) {
@@ -1214,8 +1260,6 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
         bool accountRecord = true;
         auto workingHeight = key.blockHeight;
         bool shouldSkip = shouldSkipBlock(key.blockHeight);
-
-        // std::cout << "start: " << startBlock << ", working: " << workingHeight << ", lastHeight: " << lastHeight << ", max: " << maxBlockHeight << ", skip: " << shouldSkip << std::endl;
 
         if (shouldSkip) {
             // show rewards in interval [startBlock, lastHeight)
@@ -1260,33 +1304,43 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             count ? --count : 0;
         }
 
-        if (!noRewards && (count || blockFinishingPhase) && lastHeight > workingHeight) {
+        if (!noRewards && count && lastHeight > workingHeight) {
             onPoolRewards(view, key.owner, workingHeight, lastHeight,
                 [&](int32_t height, DCT_ID poolId, RewardType type, CTokenAmount amount) {
-                    if((blockFinishingPhase && height != blockFinishingMarker) || blockFinishingPhaseDone)
-                    {
-                        blockFinishingPhase = false;
-                        blockFinishingPhaseDone = true;
-                        return;
-                    }
                     if (tokenFilter.empty() || hasToken({{amount.nTokenId, amount.nValue}})) {
-                        auto& array = ret.emplace(height, UniValue::VARR).first->second;
-                        array.push_back(rewardhistoryToJSON(key.owner, height, poolId, type, amount, format));
-                        if(!blockFinishingPhase)
-                            blockFinishingMarker = height;
-                        count ? --count : 0;
+                        if (onlyRewards && binning == "h") {
+                            auto block = ::ChainActive()[height];
+                            uint32_t binnedTime = block->GetBlockTime() - (block->GetBlockTime() % 3600);
+                            BinningKey key = {binnedTime, amount.nTokenId};
+
+                            CTokenAmount newAmount = amount;
+                            std::map<BinningKey, CTokenAmount>::iterator it = binningRet.find(key);
+
+                            auto addedItems = uniqueBinTimes.size();
+
+                            if (it != binningRet.end()) {
+                                newAmount.nValue = newAmount.nValue + (*it).second.nValue;
+                            } else {
+                                binningRet[key] = newAmount;
+                            }
+
+                            uniqueBinTimes.insert(binnedTime);
+
+                            (count && uniqueBinTimes.size() > addedItems) ? --count : 0;
+                        } else {
+                            auto& array = ret.emplace(height, UniValue::VARR).first->second;
+                            array.push_back(rewardhistoryToJSON(key.owner, height, poolId, type, amount, format));
+                            count ? --count : 0;
+                        }
                     }
                 });
         }
 
-        if(count == 0 && blockFinishingPhase == false) {
-            blockFinishingPhase = true;
-        }
-
         lastHeight = workingHeight;
 
-        return accountRecord && (!blockFinishingPhaseDone) && (count != 0 || isMine || blockFinishingPhase);
+        return accountRecord && (count != 0 || isMine);
     };
+
 
     if (!noRewards && !account.empty()) {
         // revert previous tx to restore account balances to maxBlockHeight
@@ -1305,7 +1359,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
     paccountHistoryDB->ForEachAccountHistory(shouldContinueToNextAccountHistory, account, maxBlockHeight, txn);
 
-    if (shouldSearchInWallet) {
+    /*if (shouldSearchInWallet) {
         count = limit;
         searchInWallet(
             pwallet, account, filter,
@@ -1319,18 +1373,43 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
                 if (txn != std::numeric_limits<uint32_t>::max() && height == maxBlockHeight && nIndex > txn) {
                     return true;
                 }
+
                 auto& array = ret.emplace(index->nHeight, UniValue::VARR).first->second;
                 array.push_back(outputEntryToJSON(entry, index, pwtx, format));
+
                 return --count != 0;
             });
+    }*/
+
+
+    // if we are using binning, we need to add the rewards that we aggregated now!
+    if (onlyRewards && binning == "h") {
+        for (const auto& kv : binningRet) {
+            auto& array = ret.emplace(kv.first.first, UniValue::VARR).first->second;
+            array.push_back(binnedhistoryToJSON(kv.first.first, kv.second));
+        }
     }
 
+
     UniValue slice(UniValue::VARR);
-    for (auto it = ret.cbegin(); limit != 0 && it != ret.cend(); ++it) {
+
+    uint32_t finishFullBlock = 0;
+    bool keepGoing = false;
+
+    for (auto it = ret.cbegin(); (limit != 0 || keepGoing) && it != ret.cend(); ++it) {
         const auto& array = it->second.get_array();
-        for (size_t i = 0; limit != 0 && i < array.size(); ++i) {
+        const auto& lastHeight = it->first;
+
+        if (keepGoing && (lastHeight != finishFullBlock)) break;
+
+        for (size_t i = 0; (limit != 0 || keepGoing) && i < array.size(); ++i) {
             slice.push_back(array[i]);
-            --limit;
+            limit ? --limit : 0;
+
+            if (limit == 0) {
+                keepGoing = true;
+                finishFullBlock = lastHeight;
+            }
         }
     }
 
@@ -1338,27 +1417,25 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 }
 
 
-
-UniValue getaccounthistory(const JSONRPCRequest& request) {
-
-    RPCHelpMan{"getaccounthistory",
-               "\nReturns information about account history.\n",
-               {
-                    {"owner", RPCArg::Type::STR, RPCArg::Optional::NO,
-                        "Single account ID (CScript or address)."},
-                    {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                        "Block Height to search in."},
-                    {"txn", RPCArg::Type::NUM, RPCArg::Optional::NO,
-                        "for order in block."},
-               },
-               RPCResult{
-                       "{}  An object with account history information\n"
-               },
-               RPCExamples{
-                       HelpExampleCli("getaccounthistory", "mxxA2sQMETJFbXcNbNbUzEsBCTn1JSHXST 103 2")
-                       + HelpExampleCli("getaccounthistory", "mxxA2sQMETJFbXcNbNbUzEsBCTn1JSHXST, 103, 2")
-               },
-    }.Check(request);
+UniValue getaccounthistory(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "getaccounthistory",
+        "\nReturns information about account history.\n",
+        {
+            {"owner", RPCArg::Type::STR, RPCArg::Optional::NO,
+                "Single account ID (CScript or address)."},
+            {"blockHeight", RPCArg::Type::NUM, RPCArg::Optional::NO,
+                "Block Height to search in."},
+            {"txn", RPCArg::Type::NUM, RPCArg::Optional::NO,
+                "for order in block."},
+        },
+        RPCResult{
+            "{}  An object with account history information\n"},
+        RPCExamples{
+            HelpExampleCli("getaccounthistory", "mxxA2sQMETJFbXcNbNbUzEsBCTn1JSHXST 103 2") + HelpExampleCli("getaccounthistory", "mxxA2sQMETJFbXcNbNbUzEsBCTn1JSHXST, 103, 2")},
+    }
+        .Check(request);
 
     if (!paccountHistoryDB) {
         throw JSONRPCError(RPC_INVALID_REQUEST, "-acindex is needed for account history");
@@ -2949,35 +3026,35 @@ UniValue getundo(const JSONRPCRequest& request)
 }
 
 static const CRPCCommand commands[] =
-{
-//  category       name                     actor (function)        params
-//  -------------  ------------------------ ----------------------  ----------
-    {"accounts",   "listaccounts",             &listaccounts,              {"pagination", "verbose", "indexed_amounts", "is_mine_only"}},
-    {"accounts",   "getaccount",               &getaccount,                {"owner", "pagination", "indexed_amounts"}},
-    {"accounts",   "gettokenbalances",         &gettokenbalances,          {"pagination", "indexed_amounts", "symbol_lookup"}},
-    {"accounts",   "utxostoaccount",           &utxostoaccount,            {"amounts", "inputs"}},
-    {"accounts",   "sendutxosfrom",            &sendutxosfrom,             {"from", "to", "amount", "change"}},
-    {"accounts",   "accounttoaccount",         &accounttoaccount,          {"from", "to", "inputs"}},
-    {"accounts",   "accounttoutxos",           &accounttoutxos,            {"from", "to", "inputs"}},
-    {"accounts",   "listaccounthistory",       &listaccounthistory,        {"owner", "options"}},
-    {"accounts",   "getaccounthistory",        &getaccounthistory,         {"owner", "blockHeight", "txn"}},
-    {"accounts",   "listburnhistory",          &listburnhistory,           {"options"}},
-    {"accounts",   "accounthistorycount",      &accounthistorycount,       {"owner", "options"}},
-    {"accounts",   "listcommunitybalances",    &listcommunitybalances,     {}},
-    {"accounts",   "sendtokenstoaddress",      &sendtokenstoaddress,       {"from", "to", "selectionMode"}},
-    {"accounts",   "getburninfo",              &getburninfo,               {}},
-    {"accounts",   "executesmartcontract",     &executesmartcontract,      {"name", "amount", "inputs"}},
-    {"accounts",   "futureswap",               &futureswap,                {"address", "amount", "destination", "inputs"}},
-    {"accounts",   "withdrawfutureswap",       &withdrawfutureswap,        {"address", "amount", "destination", "inputs"}},
-    {"accounts",   "listpendingfutureswaps",   &listpendingfutureswaps,    {}},
-    {"accounts",   "getpendingfutureswaps",    &getpendingfutureswaps,     {"address"}},
-    {"accounts",   "listpendingdusdswaps",     &listpendingdusdswaps,      {}},
-    {"accounts",   "getpendingdusdswaps",      &getpendingdusdswaps,       {"address"}},
-    {"accounts",   "getundo",                  &getundo,                   {"txid", "blockHeight"}},
-    {"accounts",   "getaccountsforblock",      &getaccountsforblock,       {"blockHeight"}},
-    {"accounts",   "getvaultsforblock",        &getvaultsforblock,         {"blockHeight"}},
-    {"accounts",   "getspecialsforblock",      &getspecialsforblock,         {"blockHeight"}},
-    {"hidden",     "logaccountbalances",       &logaccountbalances,        {"logfile", "rpcresult"}},
+    {
+        //  category       name                     actor (function)        params
+        //  -------------  ------------------------ ----------------------  ----------
+        {"accounts", "listaccounts", &listaccounts, {"pagination", "verbose", "indexed_amounts", "is_mine_only"}},
+        {"accounts", "getaccount", &getaccount, {"owner", "pagination", "indexed_amounts"}},
+        {"accounts", "gettokenbalances", &gettokenbalances, {"pagination", "indexed_amounts", "symbol_lookup"}},
+        {"accounts", "utxostoaccount", &utxostoaccount, {"amounts", "inputs"}},
+        {"accounts", "sendutxosfrom", &sendutxosfrom, {"from", "to", "amount", "change"}},
+        {"accounts", "accounttoaccount", &accounttoaccount, {"from", "to", "inputs"}},
+        {"accounts", "accounttoutxos", &accounttoutxos, {"from", "to", "inputs"}},
+        {"accounts", "listaccounthistory", &listaccounthistory, {"owner", "options"}},
+        {"accounts", "getaccounthistory", &getaccounthistory, {"owner", "blockHeight", "txn"}},
+        {"accounts", "listburnhistory", &listburnhistory, {"options"}},
+        {"accounts", "accounthistorycount", &accounthistorycount, {"owner", "options"}},
+        {"accounts", "listcommunitybalances", &listcommunitybalances, {}},
+        {"accounts", "sendtokenstoaddress", &sendtokenstoaddress, {"from", "to", "selectionMode"}},
+        {"accounts", "getburninfo", &getburninfo, {}},
+        {"accounts", "executesmartcontract", &executesmartcontract, {"name", "amount", "inputs"}},
+        {"accounts", "futureswap", &futureswap, {"address", "amount", "destination", "inputs"}},
+        {"accounts", "withdrawfutureswap", &withdrawfutureswap, {"address", "amount", "destination", "inputs"}},
+        {"accounts", "listpendingfutureswaps", &listpendingfutureswaps, {}},
+        {"accounts", "getpendingfutureswaps", &getpendingfutureswaps, {"address"}},
+        {"accounts", "listpendingdusdswaps", &listpendingdusdswaps, {}},
+        {"accounts", "getpendingdusdswaps", &getpendingdusdswaps, {"address"}},
+        {"accounts", "getundo", &getundo, {"txid", "blockHeight"}},
+        {"accounts", "getaccountsforblock", &getaccountsforblock, {"blockHeight"}},
+        {"accounts", "getvaultsforblock", &getvaultsforblock, {"blockHeight"}},
+        {"accounts", "getspecialsforblock", &getspecialsforblock, {"blockHeight"}},
+        {"hidden", "logaccountbalances", &logaccountbalances, {"logfile", "rpcresult"}},
 };
 
 void RegisterAccountsRPCCommands(CRPCTable& tableRPC)
