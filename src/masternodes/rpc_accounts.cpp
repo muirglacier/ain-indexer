@@ -106,10 +106,11 @@ UniValue rewardhistoryToJSON(CScript const& owner, uint32_t height, DCT_ID const
     return obj;
 }
 
-UniValue binnedhistoryToJSON(uint32_t time, CTokenAmount amount)
+UniValue binnedhistoryToJSON(uint32_t time, uint32_t block, CTokenAmount amount)
 {
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("time", (uint64_t)time);
+    obj.pushKV("block", (uint64_t)block);
     TAmounts amounts({{amount.nTokenId, amount.nValue}});
     obj.pushKV("amounts", AmountsToJSON(amounts));
     return obj;
@@ -1033,6 +1034,7 @@ public:
 struct BinningKey;
 struct BinningKey {
     uint32_t first;
+    uint32_t block;
     DCT_ID second;
 
     bool operator<(const BinningKey& rhs) const
@@ -1311,7 +1313,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
                         if (onlyRewards && binning == "h") {
                             auto block = ::ChainActive()[height];
                             uint32_t binnedTime = block->GetBlockTime() - (block->GetBlockTime() % 3600);
-                            BinningKey key = {binnedTime, amount.nTokenId};
+                            BinningKey key = {binnedTime, (uint32_t)height, amount.nTokenId};
 
                             CTokenAmount newAmount = amount;
                             std::map<BinningKey, CTokenAmount>::iterator it = binningRet.find(key);
@@ -1320,9 +1322,14 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
 
                             if (it != binningRet.end()) {
                                 newAmount.nValue = newAmount.nValue + (*it).second.nValue;
-                            } else {
-                                binningRet[key] = newAmount;
                             }
+
+
+                            binningRet.erase(key);
+                            if (key.block > height) key.block = height;
+
+                            binningRet[key] = newAmount;
+
 
                             uniqueBinTimes.insert(binnedTime);
 
@@ -1386,7 +1393,7 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
     if (onlyRewards && binning == "h") {
         for (const auto& kv : binningRet) {
             auto& array = ret.emplace(kv.first.first, UniValue::VARR).first->second;
-            array.push_back(binnedhistoryToJSON(kv.first.first, kv.second));
+            array.push_back(binnedhistoryToJSON(kv.first.first, kv.first.block, kv.second));
         }
     }
 
