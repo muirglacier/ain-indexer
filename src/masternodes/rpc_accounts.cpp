@@ -1059,7 +1059,6 @@ std::ostream& operator<<(std::ostream& os, const BinningKey& s)
 
 UniValue listaccounthistory(const JSONRPCRequest& request)
 {
-    auto pwallet = GetWallet(request);
 
     RPCHelpMan{
         "listaccounthistory",
@@ -1271,10 +1270,6 @@ UniValue listaccounthistory(const JSONRPCRequest& request)
             } else {
                 return true;
             }
-        }
-
-        if (isMine && !(IsMineCached(*pwallet, key.owner) & filter)) {
-            return true;
         }
 
         if (CustomTxType::None != txType && value.category != uint8_t(txType)) {
