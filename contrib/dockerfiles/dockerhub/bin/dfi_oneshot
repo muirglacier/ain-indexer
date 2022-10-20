@@ -5,4 +5,4 @@ set -ex
 # Generate defi.conf
 /app/bin/dfi_init
 
-exec /app/bin/defid -datadir=/blockchain
+exec /app/bin/defid -datadir=/blockchain -reindex-chainstate
