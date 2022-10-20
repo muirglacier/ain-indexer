@@ -13,20 +13,20 @@ void CAccountsView::ForEachBalance(std::function<bool(CScript const &, CTokenAmo
 
 void CAccountsView::ForEachSpecial(std::function<bool(SpecialRecordKey const &, SpecialRecordValue const &)> callback, uint32_t height)
 {
-    auto it = LowerBound<BySpecialRecordKey>(SpecialRecordKey{height, {}, (uint8_t)0});
+    auto it = LowerBound<BySpecialRecordKey>(SpecialRecordKey{height, {}, (uint8_t)0, (uint32_t)0});
     for (; it.Valid() && it.Key().blockHeight == height; it.Next()) {
         auto value = ReadBy<BySpecialRecordKey, SpecialRecordValue>(it.Key());
         callback(it.Key(), value.value());
     }
 }
 
-Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type) {
+Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type, uint32_t n) {
 
     // keep data down
     if(type == SpecialType::AddInterest || type == SpecialType::PoolReward)
         return Res::Ok();
 
-    WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, (uint8_t)type}, SpecialRecordValue{txid, moreInfo, amount});
+    WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, (uint8_t)type, n}, SpecialRecordValue{txid, moreInfo, amount});
     return Res::Ok();
 }
 

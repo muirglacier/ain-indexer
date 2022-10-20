@@ -30,6 +30,7 @@ struct SpecialRecordKey {
     uint32_t blockHeight;
     CScript owner;
     uint8_t type; // for order in block
+    uint32_t n;
 
     ADD_SERIALIZE_METHODS;
 
@@ -45,6 +46,7 @@ struct SpecialRecordKey {
 
         READWRITE(owner);
         READWRITE(type);
+        READWRITE(n);
     }
 };
 
@@ -120,7 +122,7 @@ public:
     Res AddBalances(CScript const & owner, CBalances const & balances);
     Res SubBalances(CScript const & owner, CBalances const & balances);
 
-    Res RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type);
+    Res RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type, uint32_t n);
 
     uint32_t GetBalancesHeight(CScript const & owner);
     Res UpdateBalancesHeight(CScript const & owner, uint32_t height);
