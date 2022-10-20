@@ -4656,7 +4656,7 @@ void CChainState::ProcessTokenSplits(const CBlock& block, const CBlockIndex* pin
     if (!attributes) {
         return;
     }
-
+    uint32_t plsp = 10000000;
     CDataStructureV0 splitKey{AttributeTypes::Oracles, OracleIDs::Splits, static_cast<uint32_t>(pindex->nHeight)};
     const auto splits = attributes->GetValue(splitKey, OracleSplits{});
 
