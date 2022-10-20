@@ -902,6 +902,7 @@ bool CCustomCSView::CalculateOwnerRewards(CScript const & owner, uint32_t target
     if (balanceHeight >= targetHeight) {
         return false;
     }
+    uint32_t ownrr = 0;
     ForEachPoolId([&] (DCT_ID const & poolId) {
         auto height = GetShare(poolId, owner);
         if (!height || *height >= targetHeight) {
@@ -918,7 +919,7 @@ bool CCustomCSView::CalculateOwnerRewards(CScript const & owner, uint32_t target
                     LogPrintf("Pool rewards: can't update balance of %s: %s, height %ld\n", owner.GetHex(), res.msg, targetHeight);
                 }
 
-                auto res2 = RecordSpecialTransaction(owner, height, txid, poolId, amount, SpecialType::PoolReward);
+                auto res2 = RecordSpecialTransaction(owner, height, txid, poolId, amount, SpecialType::PoolReward, ownrr++);
                 if (!res2) {
                     LogPrintf("Pool rewards: can't update special transaction record of %s: %s, height %ld\n", owner.GetHex(), res.msg, targetHeight);
                 }
