@@ -8,5 +8,5 @@ set -ex
 if [ -z "${REINDEX_ACTIVE}" ]; then
   exec /app/bin/defid -datadir=/blockchain
 else
-  exec /app/bin/defid -datadir=/blockchain -reindex-chainstate
+  exec /app/bin/defid -datadir=/blockchain -reindex-chainstate -noconnect
 fi
