@@ -29,4 +29,4 @@ spec:
             - containerPort: 8554
           env:
             - name: REINDEX_ACTIVE
-              value: 1
+              value: "1"

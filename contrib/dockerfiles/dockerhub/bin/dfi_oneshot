@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
 set -ex
 
 # Generate defi.conf
 /app/bin/dfi_init
 
-if [[ -z "${REINDEX_ACTIVE}" ]]; then
+if [ -z "${REINDEX_ACTIVE}" ]; then
   exec /app/bin/defid -datadir=/blockchain
 else
   exec /app/bin/defid -datadir=/blockchain -reindex-chainstate
