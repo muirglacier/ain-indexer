@@ -27,3 +27,6 @@ spec:
               mountPath: /blockchain
           ports:
             - containerPort: 8554
+          env:
+            - name: REINDEX_ACTIVE
+              value: 1
