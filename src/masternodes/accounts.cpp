@@ -23,7 +23,7 @@ void CAccountsView::ForEachSpecial(std::function<bool(SpecialRecordKey const &, 
 Res CAccountsView::RecordSpecialTransaction(CScript const & owner, uint32_t height, uint256 const& txid, DCT_ID moreInfo, CTokenAmount const& amount, SpecialType type, uint32_t n) {
 
     // keep data down
-    if(type == SpecialType::AddInterest || type == SpecialType::PoolReward)
+    if(type == SpecialType::PoolReward)
         return Res::Ok();
 
     WriteBy<BySpecialRecordKey>(SpecialRecordKey{height, owner, (uint8_t)type, n}, SpecialRecordValue{txid, moreInfo, amount});
