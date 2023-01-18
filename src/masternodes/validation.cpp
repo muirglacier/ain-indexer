@@ -308,7 +308,7 @@ static void ProcessEunosEvents(const CBlockIndex* pindex, CCustomCSView& cache, 
 
                 // Add transfer as additional TX in block
                 pburnHistoryDB->WriteAccountHistory({Params().GetConsensus().burnAddress, static_cast<uint32_t>(pindex->nHeight), GetNextBurnPosition()},
-                                                    {uint256{}, static_cast<uint8_t>(CustomTxType::AccountToAccount), {{subItem.first, subItem.second}}});
+                                                    {uint256{}, static_cast<uint8_t>(CustomTxType::AccountToAccount), uint256S("0"), {{subItem.first, subItem.second}}});
             }
             else // Log burn failure
             {
