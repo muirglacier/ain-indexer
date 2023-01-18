@@ -141,8 +141,8 @@ public:
                            const uint256 &txid,
                            uint8_t type,
                            CHistoryWriters *writers);
-    Res AddBalance(const CScript &owner, CTokenAmount amount, bool skipVault = false) override;
-    Res SubBalance(const CScript &owner, CTokenAmount amount, bool skipVault = false) override;
+    Res AddBalance(const CScript &owner, CTokenAmount amount) override;
+    Res SubBalance(const CScript &owner, CTokenAmount amount) override;
 
     Res AddPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason);
     Res SubPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason);

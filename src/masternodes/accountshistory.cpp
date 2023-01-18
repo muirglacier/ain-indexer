@@ -203,7 +203,7 @@ void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount
     if (burnView && owner == Params().GetConsensus().burnAddress) {
         burnDiffs[owner][amount.nTokenId] += amount.nValue;
     }
-    if (!skipVault && vaultView && !vaultID.IsNull()) {
+    if (vaultView && !vaultID.IsNull()) {
         vaultDiffs[vaultID][owner][amount.nTokenId] += amount.nValue;
     }
 }
@@ -234,7 +234,7 @@ void CHistoryWriters::SubBalance(const CScript &owner, const CTokenAmount amount
     if (burnView && owner == Params().GetConsensus().burnAddress) {
         burnDiffs[owner][amount.nTokenId] -= amount.nValue;
     }
-    if (!skipVault && vaultView && !vaultID.IsNull()) {
+    if (vaultView && !vaultID.IsNull()) {
         vaultDiffs[vaultID][owner][amount.nTokenId] -= amount.nValue;
     }
 }
