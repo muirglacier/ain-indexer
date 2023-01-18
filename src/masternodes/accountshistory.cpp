@@ -275,7 +275,7 @@ void CHistoryWriters::Flush(const uint32_t height,
     }
     if (burnView) {
         for (const auto &diff : burnDiffs) {
-            burnView->WriteAccountHistory({diff.first, height, txn}, {txid, type, diff.second});
+            burnView->WriteAccountHistory({diff.first, height, txn}, {txid, type, uint256S("0"), diff.second});
         }
     }
     if (vaultView) {
