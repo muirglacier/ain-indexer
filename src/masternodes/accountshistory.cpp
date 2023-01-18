@@ -148,15 +148,7 @@ Res CAccountsHistoryWriter::AddPhantomBalance(const CScript &owner, CTokenAmount
     if (writers && amount.nValue != 0) {
         writers->AddBalance(owner, amount, vaultID);
     }
-    return res;
-}
-
-Res CAccountsHistoryWriter::AddBalance(const CScript &owner, CTokenAmount amount) {
-    auto res = CCustomCSView::AddBalance(owner, amount);
-    if (writers && amount.nValue != 0 && res.ok) {
-        writers->AddBalance(owner, amount, vaultID);
-    }
-    return res;
+    return Res.Ok();
 }
 
 Res CAccountsHistoryWriter::SubBalance(const CScript &owner, CTokenAmount amount) {
@@ -170,10 +162,10 @@ Res CAccountsHistoryWriter::SubBalance(const CScript &owner, CTokenAmount amount
 
 Res CAccountsHistoryWriter::SubPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason) {
     if (writers && amount.nValue != 0) {
-        writers->SubBalance(owner, amount, vaultID, true);
+        writers->SubBalance(owner, amount, vaultID);
     }
 
-    return res;
+    return Res.Ok();
 }
 
 bool CAccountsHistoryWriter::Flush() {
@@ -210,13 +202,13 @@ void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount
 
 void CHistoryWriters::AddPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType) {
     if (historyView) {
-        phantomdiffs[vaultID][owner][amount.phantomType][amount.nTokenId] += amount.nValue;
+        phantomdiffs[vaultID][owner][phantomType][amount.nTokenId] += amount.nValue;
     }
 }
 
 void CHistoryWriters::SubPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType) {
     if (historyView) {
-                phantomdiffs[vaultID][owner][amount.phantomType][amount.nTokenId] -= amount.nValue;
+                phantomdiffs[vaultID][owner][phantomType][amount.nTokenId] -= amount.nValue;
 
     }
 }
