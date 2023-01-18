@@ -615,13 +615,15 @@ static void ProcessLoanEvents(const CBlockIndex* pindex, CCustomCSView& cache, c
         });
     }
 
-    CHistoryWriters writers{nullptr, pburnHistoryDB.get(), pvaultHistoryDB.get()};
+    // DC: Added account history so we see those bids and batches in regular account history as well
+    CHistoryWriters writers{paccountHistoryDB.get(), pburnHistoryDB.get(), pvaultHistoryDB.get()};
     CAccountsHistoryWriter view(cache, pindex->nHeight, ~0u, {}, uint8_t(CustomTxType::AuctionBid), &writers);
 
     view.ForEachVaultAuction([&](const CVaultId& vaultId, const CAuctionData& data) {
         if (data.liquidationHeight != uint32_t(pindex->nHeight)) {
             return false;
         }
+        view.vaultID = vaultId; // DC: for correct history entries
         auto vault = view.GetVault(vaultId);
         assert(vault);
 

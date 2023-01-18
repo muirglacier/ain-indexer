@@ -43,6 +43,7 @@ struct AccountHistoryKey {
 struct AccountHistoryValue {
     uint256 txid;
     unsigned char category;
+    uint256 vaultid;
     TAmounts diff;
 
     ADD_SERIALIZE_METHODS;
@@ -51,6 +52,7 @@ struct AccountHistoryValue {
     inline void SerializationOp(Stream &s, Operation ser_action) {
         READWRITE(txid);
         READWRITE(category);
+        READWRITE(vaultid);
         READWRITE(diff);
     }
 };

@@ -215,7 +215,7 @@ void CHistoryWriters::Flush(const uint32_t height,
                      txid.GetHex(),
                      ScriptToString(diff.first),
                      (CBalances{diff.second}.ToString()));
-            historyView->WriteAccountHistory({diff.first, height, txn}, {txid, type, diff.second});
+            historyView->WriteAccountHistory({diff.first, height, txn}, {txid, type, vaultID, diff.second});
         }
     }
     if (burnView) {
