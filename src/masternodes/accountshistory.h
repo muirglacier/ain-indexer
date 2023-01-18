@@ -78,6 +78,8 @@ public:
     };
 };
 
+typedef std::map<uint8_t, TAmounts> TPhantomAmounts;
+
 class CAccountHistoryStorage : public CAccountsHistoryView, public CAuctionHistoryView {
 public:
     CAccountHistoryStorage(CAccountHistoryStorage &accountHistory)
@@ -94,6 +96,7 @@ class CHistoryWriters {
     CAccountHistoryStorage *historyView{};
     CBurnHistoryStorage *burnView{};
     std::map<CScript, TAmounts> diffs;
+    std::map<uint256, std::map<CScript, TPhantomAmounts>> phantomdiffs;
     std::map<CScript, TAmounts> burnDiffs;
     std::map<uint256, std::map<CScript, TAmounts>> vaultDiffs;
 
@@ -111,6 +114,10 @@ public:
     void AddBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID);
     void AddFeeBurn(const CScript &owner, const CAmount amount);
     void SubBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID);
+
+    void AddPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType);
+    void SubPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType);
+
     void Flush(const uint32_t height,
                const uint256 &txid,
                const uint32_t txn,
@@ -134,8 +141,12 @@ public:
                            const uint256 &txid,
                            uint8_t type,
                            CHistoryWriters *writers);
-    Res AddBalance(const CScript &owner, CTokenAmount amount) override;
-    Res SubBalance(const CScript &owner, CTokenAmount amount) override;
+    Res AddBalance(const CScript &owner, CTokenAmount amount, bool skipVault = false) override;
+    Res SubBalance(const CScript &owner, CTokenAmount amount, bool skipVault = false) override;
+
+    Res AddPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason);
+    Res SubPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason);
+
     bool Flush() override;
 
     CAccountHistoryStorage *GetAccountHistoryStore() override;

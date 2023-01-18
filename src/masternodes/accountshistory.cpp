@@ -144,10 +144,33 @@ Res CAccountsHistoryWriter::AddBalance(const CScript &owner, CTokenAmount amount
     return res;
 }
 
+Res CAccountsHistoryWriter::AddPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason) {
+    if (writers && amount.nValue != 0) {
+        writers->AddBalance(owner, amount, vaultID);
+    }
+    return res;
+}
+
+Res CAccountsHistoryWriter::AddBalance(const CScript &owner, CTokenAmount amount) {
+    auto res = CCustomCSView::AddBalance(owner, amount);
+    if (writers && amount.nValue != 0 && res.ok) {
+        writers->AddBalance(owner, amount, vaultID);
+    }
+    return res;
+}
+
 Res CAccountsHistoryWriter::SubBalance(const CScript &owner, CTokenAmount amount) {
     auto res = CCustomCSView::SubBalance(owner, amount);
     if (writers && res.ok && amount.nValue != 0) {
         writers->SubBalance(owner, amount, vaultID);
+    }
+
+    return res;
+}
+
+Res CAccountsHistoryWriter::SubPhantomBalance(const CScript &owner, CTokenAmount amount, uint8_t phantomreason) {
+    if (writers && amount.nValue != 0) {
+        writers->SubBalance(owner, amount, vaultID, true);
     }
 
     return res;
@@ -173,15 +196,28 @@ CHistoryWriters::CHistoryWriters(CAccountHistoryStorage *historyView,
 
 extern std::string ScriptToString(const CScript &script);
 
-void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID) {
+void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, bool skipVault) {
     if (historyView) {
         diffs[owner][amount.nTokenId] += amount.nValue;
     }
     if (burnView && owner == Params().GetConsensus().burnAddress) {
         burnDiffs[owner][amount.nTokenId] += amount.nValue;
     }
-    if (vaultView && !vaultID.IsNull()) {
+    if (!skipVault && vaultView && !vaultID.IsNull()) {
         vaultDiffs[vaultID][owner][amount.nTokenId] += amount.nValue;
+    }
+}
+
+void CHistoryWriters::AddPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType) {
+    if (historyView) {
+        phantomdiffs[vaultID][owner][amount.phantomType][amount.nTokenId] += amount.nValue;
+    }
+}
+
+void CHistoryWriters::SubPhantomBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, uint8_t phantomType) {
+    if (historyView) {
+                phantomdiffs[vaultID][owner][amount.phantomType][amount.nTokenId] -= amount.nValue;
+
     }
 }
 
@@ -191,14 +227,14 @@ void CHistoryWriters::AddFeeBurn(const CScript &owner, const CAmount amount) {
     }
 }
 
-void CHistoryWriters::SubBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID) {
+void CHistoryWriters::SubBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, bool skipVault) {
     if (historyView) {
         diffs[owner][amount.nTokenId] -= amount.nValue;
     }
     if (burnView && owner == Params().GetConsensus().burnAddress) {
         burnDiffs[owner][amount.nTokenId] -= amount.nValue;
     }
-    if (vaultView && !vaultID.IsNull()) {
+    if (!skipVault && vaultView && !vaultID.IsNull()) {
         vaultDiffs[vaultID][owner][amount.nTokenId] -= amount.nValue;
     }
 }
@@ -216,6 +252,33 @@ void CHistoryWriters::Flush(const uint32_t height,
                      ScriptToString(diff.first),
                      (CBalances{diff.second}.ToString()));
             historyView->WriteAccountHistory({diff.first, height, txn}, {txid, type, vaultID, diff.second});
+        }
+
+        // typedef std::map<uint8_t, TAmounts> TPhantomAmounts;
+
+        // now also write phantom diffs
+        uint32_t offset = txn + 1000;
+
+        for (const auto &diff : phantomdiffs) {
+            uint256 pseudoVaultId = diff.first;
+            for (const auto &addresses : diff.second) {
+                CScript owner = addresses.first;
+                // typedef std::map<DCT_ID, std::pair<CAmount, uint8_t>> TPhantomAmounts;
+                for (const auto &coins : addresses.second) {
+                    uint8_t pseudotype = coins.first;
+                    TAmounts amounts = coins.second;
+
+                    LogPrint(BCLog::ACCOUNTCHANGE,
+                     "PseudoAccountChange: txid=%s addr=%s change=%s\n",
+                     txid.GetHex(),
+                     ScriptToString(owner),
+                     (CBalances{amounts}.ToString()));
+                    
+                    ++offset;
+                    historyView->WriteAccountHistory({owner, height, txn + offset}, {txid, pseudotype, pseudoVaultId, amounts});
+                }
+               
+            }
         }
     }
     if (burnView) {

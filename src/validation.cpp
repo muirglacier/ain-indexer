@@ -2739,7 +2739,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             if (tx.vout[j].scriptPubKey == Params().GetConsensus().burnAddress)
             {
                 writeBurnEntries.push_back({{tx.vout[j].scriptPubKey, static_cast<uint32_t>(pindex->nHeight), i},
-                                            {block.vtx[i]->GetHash(), static_cast<uint8_t>(CustomTxType::None), {{DCT_ID{0}, tx.vout[j].nValue}}}});
+                                            {block.vtx[i]->GetHash(), static_cast<uint8_t>(CustomTxType::None), uint256S("0"), {{DCT_ID{0}, tx.vout[j].nValue}}}});
             }
         }
 
