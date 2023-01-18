@@ -148,7 +148,7 @@ Res CAccountsHistoryWriter::AddPhantomBalance(const CScript &owner, CTokenAmount
     if (writers && amount.nValue != 0) {
         writers->AddBalance(owner, amount, vaultID);
     }
-    return Res.Ok();
+    return Res::Ok();
 }
 
 Res CAccountsHistoryWriter::SubBalance(const CScript &owner, CTokenAmount amount) {
@@ -165,7 +165,7 @@ Res CAccountsHistoryWriter::SubPhantomBalance(const CScript &owner, CTokenAmount
         writers->SubBalance(owner, amount, vaultID);
     }
 
-    return Res.Ok();
+    return Res::Ok();
 }
 
 bool CAccountsHistoryWriter::Flush() {
@@ -188,7 +188,7 @@ CHistoryWriters::CHistoryWriters(CAccountHistoryStorage *historyView,
 
 extern std::string ScriptToString(const CScript &script);
 
-void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, bool skipVault) {
+void CHistoryWriters::AddBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID) {
     if (historyView) {
         diffs[owner][amount.nTokenId] += amount.nValue;
     }
@@ -219,7 +219,7 @@ void CHistoryWriters::AddFeeBurn(const CScript &owner, const CAmount amount) {
     }
 }
 
-void CHistoryWriters::SubBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID, bool skipVault) {
+void CHistoryWriters::SubBalance(const CScript &owner, const CTokenAmount amount, const uint256 &vaultID) {
     if (historyView) {
         diffs[owner][amount.nTokenId] -= amount.nValue;
     }
