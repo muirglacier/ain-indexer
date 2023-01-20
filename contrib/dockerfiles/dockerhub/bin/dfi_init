@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -ex
+
+# This shouldn't be in the Dockerfile or containers built from the same image
+# will have the same credentials.
+if [ ! -e "/blockchain/defi.conf" ]; then
+    mkdir -p /blockchain/
+
+    echo "Creating defi.conf"
+
+    # Seed a random password for JSON RPC server
+    cat <<EOF > /blockchain/defi.conf
+txindex=1
+acindex=1
+vaultindex=1
+blocksonly=1
+prune=0
+server=1
+disablewallet=1
+printtoconsole=1
+rpcbind=0.0.0.0
+rpcallowip=0.0.0.0/0
+rpcuser=${RPCUSER:-defirpc}
+rpcpassword=${RPCPASSWORD:-`dd if=/dev/urandom bs=33 count=1 2>/dev/null | base64`}
+EOF
+
+fi
+
+cat /blockchain/defi.conf
+
+echo "Initialization completed successfully"

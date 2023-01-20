@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: defid
+  name: defid-docker
+  labels:
+    app.kubernetes.io/name: defid-docker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: defid-docker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: defid-docker
+    spec:
+      volumes:
+        - name: defid-local-pv
+          persistentVolumeClaim:
+            claimName: defid-pv-claim
+      containers:
+        - name: defid-docker
+          image: muirglacier/ain:latest
+          volumeMounts:
+            - name: defid-local-pv
+              mountPath: /blockchain
+          ports:
+            - containerPort: 8554

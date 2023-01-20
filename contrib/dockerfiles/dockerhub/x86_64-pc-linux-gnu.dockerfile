@@ -6,14 +6,12 @@ WORKDIR /app
 
 COPY --from=dh-build /app/. ./
 
-RUN useradd --create-home defi && \
-    mkdir -p /data && \
-    chown defi:defi /data && \
-    ln -s /data /home/defi/.defi
+COPY ./bin/dfi_init ./bin/dfi_oneshot /app/bin/
 
-VOLUME ["/data"]
+RUN chmod 755 /app/bin/dfi_init
+RUN chmod 755 /app/bin/dfi_oneshot
+RUN chmod 755 /app/bin/defid
 
-USER defi:defi
-CMD [ "/app/bin/defid" ]
+CMD [ "/app/bin/dfi_oneshot" ]
 
-EXPOSE 8555 8554 18555 18554 19555 19554 20555 20554
+EXPOSE 8555 8554 18555 18554 19555 19554
